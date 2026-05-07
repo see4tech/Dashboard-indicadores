@@ -10,7 +10,7 @@
     init: null,  // assigned below
     _mode: null,
     get: null,  // assigned below
-    preload: async function () { throw new Error("not implemented"); },
+    preload: null,  // assigned below
     invalidateAll: null,  // assigned below
     on: null,  // assigned below
     policyFor: null,  // assigned below
@@ -239,6 +239,49 @@
       r.onsuccess = () => resolve();
       r.onerror = () => reject(r.error);
     });
+  };
+
+  const PRELOAD_CONCURRENCY = 6;
+
+  SBCache.preload = async function (jobs) {
+    const total = jobs.length;
+    let done = 0;
+    let failed = 0;
+    let allFailed = true;
+
+    async function runJob(job) {
+      try {
+        const now = SBCache._now();
+        const existing = _l1.get(job.url) || await SBCache._idbGet(job.url);
+        if (existing && (existing.expiresAt == null || existing.expiresAt > now)) {
+          if (!_l1.has(job.url)) _l1.set(job.url, existing);
+          allFailed = false;
+          return;
+        }
+        await _fetchAndPersist(job.url);
+        allFailed = false;
+      } catch (e) {
+        failed++;
+        SBCache._emit("error", { url: job.url, message: e.message || String(e) });
+      } finally {
+        done++;
+        SBCache._emit("progress", { done, total, failed });
+      }
+    }
+
+    const queue = jobs.slice();
+    const workers = Array.from({ length: Math.min(PRELOAD_CONCURRENCY, queue.length) }, async () => {
+      while (queue.length) {
+        const job = queue.shift();
+        await runJob(job);
+      }
+    });
+    await Promise.all(workers);
+
+    if (allFailed && total > 0) {
+      SBCache._emit("error", { message: "preload total failure", total_failure: true });
+    }
+    SBCache._emit("done", { done, failed });
   };
 
   SBCache.invalidateAll = async function () {
