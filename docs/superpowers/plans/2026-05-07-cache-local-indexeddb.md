@@ -819,7 +819,7 @@ function _buildRecord(url, body, status) {
 
 async function _safePut(rec) {
   try { await SBCache._idbPut(rec); }
-  catch (e) { /* quota se maneja en Task 17 */ }
+  catch (e) { /* quota se maneja en Task 13 (eviction) */ }
 }
 
 SBCache.get = async function (url) {
