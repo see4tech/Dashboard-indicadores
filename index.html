@@ -7,6 +7,7 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script src="/cache.js"></script>
 <style>
   :root {
     --bg: #f6f8fc;
@@ -186,6 +187,27 @@
   .step-list li.error .dot { background: var(--red); }
   .step-list li.active .dot { background: var(--primary); animation: pulse 1.2s ease infinite; }
   @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.4); box-shadow: 0 0 0 4px rgba(44,109,240,.15)} }
+  #preloadPill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.25rem 0.625rem;
+    margin-left: 0.5rem;
+    background: var(--panel-2);
+    color: var(--muted);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    font-size: 0.8125rem;
+    line-height: 1.2;
+    vertical-align: middle;
+  }
+  #preloadPill.success { border-color: var(--green); color: var(--green); }
+  #preloadPill.error   { border-color: var(--red);   color: var(--red); background: #fbe9ec; }
+  #preloadPill button {
+    background: transparent; color: inherit; border: 0; padding: 0;
+    cursor: pointer; font-size: 1rem; line-height: 1;
+  }
+  #preloadPill[hidden] { display: none; }
 </style>
 </head>
 <body>
@@ -226,6 +248,11 @@
   </div>
 
   <button class="primary" id="reloadBtn">Recargar datos</button>
+
+  <div id="preloadPill" hidden>
+    <span id="preloadPillText">Precargando 0/0</span>
+    <button id="preloadPillClose" type="button" aria-label="ocultar">×</button>
+  </div>
 </header>
 
 <nav class="tabs" id="tabs">
