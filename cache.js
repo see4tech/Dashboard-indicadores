@@ -9,7 +9,7 @@
 
     init: null,  // assigned below
     _mode: null,
-    get: async function () { throw new Error("not implemented"); },
+    get: null,  // assigned below
     preload: async function () { throw new Error("not implemented"); },
     invalidateAll: async function () { throw new Error("not implemented"); },
     on: null,  // assigned below
@@ -50,6 +50,94 @@
       req.onerror = () => reject(req.error);
     });
     SBCache._mode = "idb";
+  };
+
+  function _normalizeBody(parsed) {
+    if (Array.isArray(parsed)) return parsed;
+    if (parsed && typeof parsed === "object") {
+      if ("Data" in parsed) return parsed.Data;
+      if (parsed.Succeeded === false) return [];
+    }
+    return parsed;
+  }
+
+  function _buildRecord(url, body, status) {
+    const periodoFinal = SBCache.parsePeriodoFinal(url);
+    const now = SBCache._now();
+    const policy = SBCache.policyFor(periodoFinal, now);
+    return {
+      url, body, status,
+      fetchedAt: now,
+      periodoFinal,
+      expiresAt: policy.ttlMs == null ? null : now + policy.ttlMs,
+      schemaVersion: 1,
+    };
+  }
+
+  async function _safePut(rec) {
+    try { await SBCache._idbPut(rec); }
+    catch (e) { /* quota se maneja en Task 13 (eviction) */ }
+  }
+
+  async function _fetchAndPersist(url) {
+    const r = await SBCache._fetch(url, { headers: { "Accept": "application/json" } });
+    if (r.status === 204) {
+      const empty = [];
+      const rec = _buildRecord(url, empty, 204);
+      await _safePut(rec);
+      _l1.set(url, rec);
+      return empty;
+    }
+    let parsed;
+    try { parsed = await r.json(); } catch { parsed = null; }
+    if (!r.ok) {
+      const msg = (parsed && parsed.Message) || `HTTP ${r.status}`;
+      throw new Error(msg);
+    }
+    const body = _normalizeBody(parsed);
+    const rec = _buildRecord(url, body, r.status);
+    await _safePut(rec);
+    _l1.set(url, rec);
+    return body;
+  }
+
+  function _scheduleRevalidate(/* url, prev */) {
+    // Implementado en Task 9
+  }
+
+  SBCache.get = async function (url) {
+    if (!SBCache._mode) await SBCache.init();
+    // Bypass para URLs no /api/
+    if (!url.startsWith("/api/")) {
+      const r = await SBCache._fetch(url);
+      if (r.status === 204) return [];
+      return _normalizeBody(await r.json());
+    }
+    const now = SBCache._now();
+    // L1
+    const l1 = _l1.get(url);
+    if (l1 && (l1.expiresAt == null || l1.expiresAt > now)) return l1.body;
+    // dedup
+    if (_inflight.has(url)) return _inflight.get(url);
+    // L2
+    const l2 = await SBCache._idbGet(url);
+    if (l2) {
+      const fresh = (l2.expiresAt == null || l2.expiresAt > now);
+      if (fresh) {
+        _l1.set(url, l2);
+        return l2.body;
+      }
+      const policy = SBCache.policyFor(l2.periodoFinal, now);
+      if (policy.swr) {
+        _scheduleRevalidate(url, l2);
+        _l1.set(url, l2);
+        return l2.body;
+      }
+    }
+    // Fetch
+    const p = _fetchAndPersist(url).finally(() => _inflight.delete(url));
+    _inflight.set(url, p);
+    return p;
   };
 
   function _tx(mode) {
