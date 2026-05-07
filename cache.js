@@ -52,6 +52,55 @@
     SBCache._mode = "idb";
   };
 
+  function _tx(mode) {
+    return _db.transaction(STORE, mode).objectStore(STORE);
+  }
+
+  SBCache._idbGet = function (url) {
+    return new Promise((resolve, reject) => {
+      if (SBCache._mode !== "idb") return resolve(undefined);
+      const r = _tx("readonly").get(url);
+      r.onsuccess = () => resolve(r.result || undefined);
+      r.onerror = () => reject(r.error);
+    });
+  };
+
+  SBCache._idbPut = function (record) {
+    return new Promise((resolve, reject) => {
+      if (SBCache._mode !== "idb") return resolve();
+      const r = _tx("readwrite").put(record);
+      r.onsuccess = () => resolve();
+      r.onerror = () => reject(r.error);
+    });
+  };
+
+  SBCache._idbClear = function () {
+    return new Promise((resolve, reject) => {
+      if (SBCache._mode !== "idb") return resolve();
+      const r = _tx("readwrite").clear();
+      r.onsuccess = () => resolve();
+      r.onerror = () => reject(r.error);
+    });
+  };
+
+  SBCache._idbGetAll = function () {
+    return new Promise((resolve, reject) => {
+      if (SBCache._mode !== "idb") return resolve([]);
+      const r = _tx("readonly").getAll();
+      r.onsuccess = () => resolve(r.result || []);
+      r.onerror = () => reject(r.error);
+    });
+  };
+
+  SBCache._idbDelete = function (url) {
+    return new Promise((resolve, reject) => {
+      if (SBCache._mode !== "idb") return resolve();
+      const r = _tx("readwrite").delete(url);
+      r.onsuccess = () => resolve();
+      r.onerror = () => reject(r.error);
+    });
+  };
+
   SBCache._closeForTests = function () {
     if (_db) { try { _db.close(); } catch (e) {} _db = null; }
     _l1.clear();
