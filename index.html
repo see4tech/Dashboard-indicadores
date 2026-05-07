@@ -605,23 +605,25 @@ const Preloader = {
 /* Capa de datos — helpers                                                */
 /* ====================================================================== */
 
-/** Parámetros base para cargar TODO (sin filtro de entidad) */
+/** Parámetros base para cargar TODO el sistema (tipoEntidad=TODOS por defecto). */
 function allParams(extra = {}) {
   return {
     periodoInicial: state.periodoInicial,
     periodoFinal:   state.periodoFinal,
     paginas: 1, registros: 5000,
+    tipoEntidad: "TODOS",
     ...extra,
   };
 }
 
-/** Busca la última fecha con datos disponibles, sin filtro de entidad */
+/** Busca la última fecha con datos disponibles, agregado de TODO el sistema. */
 async function getLatestAll(path, extra = {}) {
   let period = state.periodoFinal;
   for (let i = 0; i < 6; i++) {
     const data = await safeGet(path, {
       periodoInicial: period, periodoFinal: period,
       paginas: 1, registros: 5000,
+      tipoEntidad: "TODOS",
       ...extra,
     });
     if (data?.length) return data;
@@ -725,6 +727,7 @@ async function fetchResumen() {
       periodoInicial: state.periodoInicial,
       periodoFinal:   state.periodoFinal,
       paginas: 1, registros: 200,
+      tipoEntidad: "TODOS",
     }),
     getLatestAll("/indicadores/morosidad-estresada"),
   ]);
@@ -771,6 +774,7 @@ async function fetchComparativa() {
     data = await safeGet("/indicadores/financieros", {
       periodoInicial: period, periodoFinal: period,
       paginas: 1, registros: 5000,
+      tipoEntidad: "TODOS",
       indicador: indicadores,
     });
     if (!data.length) period = prevMonth(period);

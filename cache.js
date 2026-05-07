@@ -265,13 +265,11 @@
     "Total Patrimonio Neto",
   ];
 
-  // TODOS (scope sin filtro) lo cubre preloadAll() naturalmente; aquí solo
-  // añadimos las 4 vistas por tipoEntidad que el UI ofrece como switch rápido.
+  // El dashboard siempre hace fetch con tipoEntidad=TODOS (filtra por entidad
+  // client-side). Preloaded URLs deben matchear ese param para servir cache
+  // hits a las llamadas reales del dashboard.
   const PRELOAD_SCOPES = [
-    { tipoEntidad: ["BM"]   },
-    { tipoEntidad: ["BAyC"] },
-    { tipoEntidad: ["AC"]   },
-    { tipoEntidad: ["ARC"]  },
+    { tipoEntidad: "TODOS" },
   ];
 
   function _prevMonth(ym) {
