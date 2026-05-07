@@ -1,15 +1,11 @@
 /**
- * Proxy serverless al API de Estadísticas del Sistema Financiero (SB-RD).
+ * Proxy serverless al API de Estadísticas del Sistema Financiero (SB-RD)
+ * + endpoint /mercados que agrega precios de divisas, commodities y combustibles.
  *
  * Ruta: /api/<endpoint>?...  → reescrito por netlify.toml a esta función.
  *
- * Variables de entorno requeridas (Netlify → Site settings → Environment variables):
+ * Variables de entorno requeridas:
  *   SB_API_KEY = <tu Ocp-Apim-Subscription-Key>
- *
- * Resuelve dos cosas:
- *   1) CORS: el API de SB no envía Access-Control-Allow-Origin.
- *   2) Sucuri WAF: bloquea peticiones que no parecen navegador → mandamos
- *      User-Agent / Origin / Referer realistas.
  */
 
 const UPSTREAM = "https://apis.sb.gob.do/estadisticas/v2";
@@ -35,14 +31,17 @@ exports.handler = async (event) => {
     return { statusCode: 204, headers: CORS_HEADERS, body: "" };
   }
 
-  // event.path puede llegar como /.netlify/functions/sb-api/captaciones/localidad
-  // o como /api/captaciones/localidad — manejamos ambos.
   let path = event.path || "";
   path = path.replace(/^\/\.netlify\/functions\/sb-api/, "");
   path = path.replace(/^\/api/, "");
   if (!path.startsWith("/")) path = "/" + path;
 
-  // Endpoint especial: GeoJSON de provincias de RD (cacheado en CDN)
+  // Endpoint: datos de mercados (divisas, commodities, combustibles)
+  if (path === "/mercados") {
+    return fetchMercados();
+  }
+
+  // Endpoint: GeoJSON de provincias de RD
   if (path === "/geo/provincias") {
     return fetchGeoJSON();
   }
@@ -52,7 +51,6 @@ exports.handler = async (event) => {
     return jsonError(500, "SB_API_KEY no está configurada en Netlify (Site settings → Environment variables).");
   }
 
-  // Reconstruir querystring respetando parámetros multi-valor (ej. entidad=A&entidad=B)
   const qs = new URLSearchParams();
   const mv = event.multiValueQueryStringParameters || {};
   if (Object.keys(mv).length) {
@@ -84,12 +82,233 @@ exports.handler = async (event) => {
     headers: {
       ...CORS_HEADERS,
       "Content-Type": contentType,
-      // Los datos del SB se actualizan mensualmente — cacheamos 6 horas en CDN
       "Cache-Control": "public, max-age=300, s-maxage=21600",
     },
     body,
   };
 };
+
+/* ─────────────────────────────────────────────────────────
+   /mercados — agrega datos de fuentes externas gratuitas
+   ───────────────────────────────────────────────────────── */
+async function fetchMercados() {
+  const [forexR, metalsR, oilR, btcR, fuelR] = await Promise.allSettled([
+    fetchForex(),
+    fetchMetals(),
+    fetchOil(),
+    fetchBTC(),
+    fetchFuelPrices(),
+  ]);
+
+  const forex  = forexR.status  === "fulfilled" ? forexR.value  : null;
+  const metals = metalsR.status === "fulfilled" ? metalsR.value : null;
+  const oil    = oilR.status    === "fulfilled" ? oilR.value    : null;
+  const btc    = btcR.status    === "fulfilled" ? btcR.value    : null;
+  const fuel   = fuelR.status   === "fulfilled" ? fuelR.value   : null;
+
+  // Tasa de referencia USD → DOP (mid-market)
+  const usdDop = forex?.usdDop ?? null;
+
+  // Spread típico de bancos comerciales en RD: ~2% cada lado
+  const compra = usdDop ? +(usdDop * 0.980).toFixed(2) : null;
+  const venta  = usdDop ? +(usdDop * 1.020).toFixed(2) : null;
+
+  const data = {
+    timestamp: new Date().toISOString(),
+    fuentes: {
+      forex:  forex?.fuente  ?? null,
+      metals: metals?.fuente ?? null,
+      oil:    "Yahoo Finance (CL=F)",
+      btc:    "CoinGecko",
+      fuel:   fuel?.fuente   ?? null,
+    },
+    forex: {
+      usdDopMid:    usdDop,
+      usdDopCompra: compra,
+      usdDopVenta:  venta,
+    },
+    btc: {
+      usd: btc?.usd ?? null,
+      dop: (btc?.usd && usdDop) ? +(btc.usd * usdDop) : null,
+    },
+    gold: {
+      usdPerOzt: metals?.gold ?? null,
+      dopPerOzt: (metals?.gold && usdDop) ? +(metals.gold * usdDop).toFixed(2) : null,
+    },
+    silver: {
+      usdPerOzt: metals?.silver ?? null,
+      dopPerOzt: (metals?.silver && usdDop) ? +(metals.silver * usdDop).toFixed(2) : null,
+    },
+    oil: {
+      usdPerBarrel: oil ?? null,
+      dopPerBarrel: (oil && usdDop) ? +(oil * usdDop).toFixed(2) : null,
+    },
+    fuel: fuel?.prices ?? null,
+  };
+
+  return {
+    statusCode: 200,
+    headers: {
+      ...CORS_HEADERS,
+      "Content-Type": "application/json",
+      // 15 min en cliente, 1 hora en CDN Netlify
+      "Cache-Control": "public, max-age=900, s-maxage=3600",
+    },
+    body: JSON.stringify(data),
+  };
+}
+
+/** USD/DOP mid-market — Frankfurter (ECB) → Open ER-API */
+async function fetchForex() {
+  try {
+    const r = await fetchWT("https://api.frankfurter.app/latest?from=USD&to=DOP", 8000);
+    const j = await r.json();
+    if (j?.rates?.DOP) return { usdDop: j.rates.DOP, fuente: "Frankfurter / ECB" };
+  } catch {}
+  try {
+    const r = await fetchWT("https://open.er-api.com/v6/latest/USD", 8000);
+    const j = await r.json();
+    if (j?.rates?.DOP) return { usdDop: j.rates.DOP, fuente: "Open ER-API" };
+  } catch {}
+  return null;
+}
+
+/** Oro y plata (USD/ozt) — metals.live */
+async function fetchMetals() {
+  try {
+    const r = await fetchWT("https://api.metals.live/v1/spot/gold,silver", 8000);
+    const j = await r.json();
+    let gold, silver;
+    if (Array.isArray(j)) {
+      for (const item of j) {
+        if (item.gold   != null) gold   = item.gold;
+        if (item.silver != null) silver = item.silver;
+      }
+    } else {
+      gold   = j?.gold;
+      silver = j?.silver;
+    }
+    if (gold && silver) return { gold, silver, fuente: "metals.live" };
+  } catch {}
+  return null;
+}
+
+/** Petróleo WTI (USD/barril) — Yahoo Finance */
+async function fetchOil() {
+  for (const ticker of ["CL=F", "BZ=F"]) {
+    try {
+      const r = await fetchWT(
+        `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ticker)}?interval=1d&range=1d`,
+        { headers: { "User-Agent": "Mozilla/5.0", "Accept": "application/json" } },
+        8000
+      );
+      const j = await r.json();
+      const price = j?.chart?.result?.[0]?.meta?.regularMarketPrice;
+      if (price) return price;
+    } catch {}
+  }
+  return null;
+}
+
+/** Bitcoin (USD) — CoinGecko free API */
+async function fetchBTC() {
+  try {
+    const r = await fetchWT(
+      "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd",
+      { headers: { "Accept": "application/json" } },
+      10000
+    );
+    const j = await r.json();
+    if (j?.bitcoin?.usd) return { usd: j.bitcoin.usd };
+  } catch {}
+  return null;
+}
+
+/**
+ * Precios de combustibles en RD (DOP/galón).
+ * MICM publica precios cada semana — intentamos su API y luego la web.
+ */
+async function fetchFuelPrices() {
+  // Intento con endpoints JSON conocidos/especulativos
+  for (const url of [
+    "https://micm.gob.do/api/precios-combustibles",
+    "https://micm.gob.do/api/combustibles/precios",
+  ]) {
+    try {
+      const r = await fetchWT(url, {}, 5000);
+      if (r.ok) {
+        const j = await r.json();
+        const prices = normalizeMICMJson(j);
+        if (prices) return { prices, fuente: url };
+      }
+    } catch {}
+  }
+
+  // Fallback: parsear HTML de la página pública
+  try {
+    const r = await fetchWT(
+      "https://micm.gob.do/combustibles",
+      { headers: { "User-Agent": "Mozilla/5.0", "Accept": "text/html" } },
+      10000
+    );
+    if (r.ok) {
+      const html = await r.text();
+      const prices = parseMICMHtml(html);
+      if (prices) return { prices, fuente: "micm.gob.do" };
+    }
+  } catch {}
+
+  return null;
+}
+
+function normalizeMICMJson(j) {
+  if (!Array.isArray(j)) return null;
+  const out = {};
+  for (const item of j) {
+    const nombre = (item.nombre || item.name || item.combustible || "").toLowerCase();
+    const precio = parseFloat(item.precio || item.price || item.valor || 0);
+    if (!precio) continue;
+    if (/premium/i.test(nombre))                                         out.gasolinaPremium = precio;
+    else if (/regular.*gasolina|gasolina.*regular/i.test(nombre))        out.gasolinaRegular = precio;
+    else if (/gasoil.*[oó]ptimo|[oó]ptimo.*gasoil/i.test(nombre))        out.gasoilOptimo    = precio;
+    else if (/gasoil/i.test(nombre))                                     out.gasoilRegular   = precio;
+    else if (/glp|propano/i.test(nombre))                                out.glp             = precio;
+    else if (/kerosene|kero|avtur/i.test(nombre))                        out.kerosene        = precio;
+    else if (/fuel\s*oil/i.test(nombre))                                 out.fuelOil         = precio;
+  }
+  return Object.keys(out).length >= 2 ? out : null;
+}
+
+function parseMICMHtml(html) {
+  const out = {};
+  const patterns = [
+    [/gasolina\s+premium[^\d]{0,60}(\d{2,3}[.,]\d{1,2})/i,           "gasolinaPremium"],
+    [/gasolina\s+regular[^\d]{0,60}(\d{2,3}[.,]\d{1,2})/i,           "gasolinaRegular"],
+    [/gasoil\s+[oó]ptimo[^\d]{0,60}(\d{2,3}[.,]\d{1,2})/i,           "gasoilOptimo"],
+    [/gasoil\s+regular[^\d]{0,60}(\d{2,3}[.,]\d{1,2})/i,             "gasoilRegular"],
+    [/gas\s+licuado[^\d]{0,60}(\d{2,3}[.,]\d{1,2})/i,                "glp"],
+    [/glp[^\d]{0,40}(\d{2,3}[.,]\d{1,2})/i,                          "glp"],
+    [/kerosene[^\d]{0,60}(\d{2,3}[.,]\d{1,2})/i,                     "kerosene"],
+    [/avtur[^\d]{0,60}(\d{2,3}[.,]\d{1,2})/i,                        "avtur"],
+    [/fuel\s*oil[^\d]{0,60}(\d{2,3}[.,]\d{1,2})/i,                   "fuelOil"],
+  ];
+  for (const [re, key] of patterns) {
+    if (out[key]) continue;
+    const m = html.match(re);
+    if (m) out[key] = parseFloat(m[1].replace(",", "."));
+  }
+  return Object.keys(out).length >= 2 ? out : null;
+}
+
+/** fetch con timeout usando AbortController */
+function fetchWT(url, optsOrMs, ms) {
+  let opts = {};
+  if (typeof optsOrMs === "number") { ms = optsOrMs; }
+  else if (optsOrMs && typeof optsOrMs === "object") { opts = optsOrMs; }
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), ms || 8000);
+  return fetch(url, { ...opts, signal: ctrl.signal }).finally(() => clearTimeout(timer));
+}
 
 function jsonError(status, message) {
   return {
@@ -99,7 +318,6 @@ function jsonError(status, message) {
   };
 }
 
-// GeoJSON de provincias — varios mirrors, devolvemos el primero que responda.
 async function fetchGeoJSON() {
   const sources = [
     "https://raw.githubusercontent.com/codeforgermany/click_that_hood/master/public/data/dominican-republic.geojson",
@@ -111,7 +329,6 @@ async function fetchGeoJSON() {
       const r = await fetch(url, { headers: { "User-Agent": "netlify-fn" } });
       if (!r.ok) continue;
       const body = await r.text();
-      // Validar que sea JSON válido y tipo FeatureCollection
       const j = JSON.parse(body);
       if (j && j.type === "FeatureCollection" && Array.isArray(j.features)) {
         return {
@@ -119,12 +336,12 @@ async function fetchGeoJSON() {
           headers: {
             ...CORS_HEADERS,
             "Content-Type": "application/geo+json",
-            "Cache-Control": "public, max-age=86400, s-maxage=604800", // 7 días en CDN
+            "Cache-Control": "public, max-age=86400, s-maxage=604800",
           },
           body,
         };
       }
-    } catch { /* probar siguiente */ }
+    } catch {}
   }
-  return jsonError(502, "No se pudo obtener GeoJSON de provincias de ninguno de los mirrors.");
+  return jsonError(502, "No se pudo obtener GeoJSON de provincias.");
 }

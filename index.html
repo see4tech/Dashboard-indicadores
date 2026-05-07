@@ -57,7 +57,6 @@
   button.ghost { background: transparent; }
   button.ghost:hover { background: var(--panel-2); }
 
-  /* Selector de entidades */
   .entity-trigger {
     background: var(--panel); border: 1px solid var(--border); border-radius: 8px;
     padding: 6px 10px; cursor: pointer; min-width: 220px;
@@ -79,24 +78,14 @@
   .entity-popover.open { display: flex; flex-direction: column; }
   .entity-pop-head { padding: 12px; border-bottom: 1px solid var(--border); }
   .entity-pop-search { width: 100%; }
-  .entity-pop-actions {
-    display: flex; gap: 6px; margin-top: 8px;
-  }
-  .entity-pop-actions button {
-    flex: 1; padding: 6px; font-size: 12px;
-  }
-  .entity-pop-list {
-    overflow-y: auto; padding: 8px 4px 8px 8px;
-    flex: 1;
-  }
-  .entity-group {
-    margin-bottom: 4px;
-  }
+  .entity-pop-actions { display: flex; gap: 6px; margin-top: 8px; }
+  .entity-pop-actions button { flex: 1; padding: 6px; font-size: 12px; }
+  .entity-pop-list { overflow-y: auto; padding: 8px 4px 8px 8px; flex: 1; }
+  .entity-group { margin-bottom: 4px; }
   .entity-group-head {
     display: flex; align-items: center; justify-content: space-between;
     font-size: 11px; font-weight: 600; color: var(--muted);
-    text-transform: uppercase; letter-spacing: .04em;
-    padding: 8px 6px 4px;
+    text-transform: uppercase; letter-spacing: .04em; padding: 8px 6px 4px;
   }
   .entity-group-head button {
     background: transparent; border: none; color: var(--primary);
@@ -104,8 +93,7 @@
   }
   .entity-row {
     display: flex; align-items: center; gap: 8px;
-    padding: 6px 8px; border-radius: 6px; cursor: pointer;
-    font-size: 13px;
+    padding: 6px 8px; border-radius: 6px; cursor: pointer; font-size: 13px;
   }
   .entity-row:hover { background: var(--panel-2); }
   .entity-row.selected { background: var(--primary-soft); }
@@ -117,7 +105,6 @@
   }
   .entity-wrap { position: relative; }
 
-  /* Tabs */
   nav.tabs { display: flex; gap: 4px; padding: 0 24px; border-bottom: 1px solid var(--border);
     background: var(--bg); position: sticky; top: 65px; z-index: 49; overflow-x: auto; }
   nav.tabs button { background: transparent; border: none; border-radius: 0;
@@ -130,6 +117,7 @@
   main { padding: 24px; max-width: 1600px; margin: 0 auto; }
   .grid { display: grid; gap: 16px; }
   .grid.kpis { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+  .grid.kpis-lg { grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); }
   .grid.cards-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   @media (max-width: 1100px) { .grid.cards-2 { grid-template-columns: 1fr; } }
   .card {
@@ -140,7 +128,9 @@
   .card h3 { margin: 0 0 4px; font-size: 12px; font-weight: 600;
     text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
   .card .kpi-value { font-size: 28px; font-weight: 700; margin: 6px 0 2px; }
+  .card .kpi-value.lg { font-size: 22px; }
   .card .kpi-sub { font-size: 12px; color: var(--muted); }
+  .card .kpi-src { font-size: 10px; color: var(--muted); margin-top: 4px; opacity: .7; }
   .chart-card h2 { font-size: 14px; margin: 0 0 12px; font-weight: 600; }
   .chart-wrap { position: relative; height: 320px; }
   .chart-wrap.tall { height: 460px; }
@@ -160,13 +150,14 @@
   .footer { padding: 32px 24px; color: var(--muted); font-size: 12px; text-align: center; }
   hr.sep { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
 
-  /* Empty state */
-  .empty {
-    padding: 40px 20px; text-align: center; color: var(--muted); font-size: 13px;
-  }
+  .section-title { font-size: 14px; font-weight: 600; margin: 0 0 12px; color: var(--text); }
+  .tag { display: inline-block; font-size: 10px; padding: 2px 7px; border-radius: 99px;
+    background: var(--amber); color: #fff; vertical-align: middle; margin-left: 4px; }
+  .tag.green { background: var(--green); }
+
+  .empty { padding: 40px 20px; text-align: center; color: var(--muted); font-size: 13px; }
   .empty .icon { font-size: 24px; opacity: .5; margin-bottom: 6px; }
 
-  /* PRELOADER overlay */
   .preloader {
     position: fixed; inset: 0; z-index: 200;
     background: rgba(246,248,252,.96); backdrop-filter: blur(3px);
@@ -181,19 +172,11 @@
   }
   .preloader-title { font-size: 16px; font-weight: 600; margin: 0 0 4px; text-align: center; }
   .preloader-sub { font-size: 13px; color: var(--muted); margin-bottom: 18px; text-align: center; }
-  .progress-bar {
-    height: 6px; background: var(--panel-2); border-radius: 99px; overflow: hidden;
-    margin-bottom: 14px;
-  }
-  .progress-bar > span {
-    display:block; height:100%; background: linear-gradient(90deg, var(--primary), var(--violet));
-    border-radius: 99px; transition: width .3s ease; width: 0%;
-  }
+  .progress-bar { height: 6px; background: var(--panel-2); border-radius: 99px; overflow: hidden; margin-bottom: 14px; }
+  .progress-bar > span { display:block; height:100%; background: linear-gradient(90deg, var(--primary), var(--violet));
+    border-radius: 99px; transition: width .3s ease; width: 0%; }
   .progress-row { display:flex; justify-content: space-between; font-size: 12px; color: var(--muted); }
-  .step-list {
-    margin: 14px 0 0; padding: 0; list-style: none;
-    font-size: 12px; max-height: 200px; overflow-y: auto;
-  }
+  .step-list { margin: 14px 0 0; padding: 0; list-style: none; font-size: 12px; max-height: 200px; overflow-y: auto; }
   .step-list li { display: flex; align-items: center; padding: 4px 0; color: var(--muted); }
   .step-list li.done { color: var(--green); }
   .step-list li.error { color: var(--red); }
@@ -242,7 +225,7 @@
     </div>
   </div>
 
-  <button class="primary" id="reloadBtn">Recargar</button>
+  <button class="primary" id="reloadBtn">Recargar datos</button>
 </header>
 
 <nav class="tabs" id="tabs">
@@ -253,6 +236,7 @@
   <button data-tab="mapa">Mapa por provincia</button>
   <button data-tab="estados">Estados financieros</button>
   <button data-tab="reclamaciones">Reclamaciones</button>
+  <button data-tab="mercados">Mercados</button>
 </nav>
 
 <main>
@@ -269,6 +253,7 @@
     <div class="card"><h3>Tasa pasiva</h3><div class="kpi-value" id="kpiTasaPasiva">—</div><div class="kpi-sub">Promedio %</div></div>
     <div class="card"><h3>Margen</h3><div class="kpi-value" id="kpiMargen">—</div><div class="kpi-sub">% (activa - pasiva)</div></div>
   </div>
+  <div class="small" style="margin: 8px 0 16px">* Indicadores del sistema completo — no varían con el filtro de entidades</div>
   <hr class="sep" />
   <div class="grid cards-2">
     <div class="card chart-card"><h2>Evolución — Activos y Cartera</h2><div class="chart-wrap"><canvas id="chartTrendActivos"></canvas></div></div>
@@ -345,9 +330,68 @@
   </div>
 </section>
 
+<!-- ====================== MERCADOS ====================== -->
+<section data-pane="mercados" hidden>
+
+  <p class="section-title">Divisas y activos</p>
+  <div class="grid kpis-lg" id="mercadosKpis">
+    <div class="card">
+      <h3>USD → DOP Compra</h3>
+      <div class="kpi-value lg" id="mUsdCompra">—</div>
+      <div class="kpi-sub">DOP por dólar</div>
+      <div class="kpi-src" id="mForexSrc">—</div>
+    </div>
+    <div class="card">
+      <h3>USD → DOP Venta</h3>
+      <div class="kpi-value lg" id="mUsdVenta">—</div>
+      <div class="kpi-sub">DOP por dólar</div>
+      <div class="kpi-src">spread est. ±2%</div>
+    </div>
+    <div class="card">
+      <h3>Bitcoin (BTC)</h3>
+      <div class="kpi-value lg" id="mBtcDop">—</div>
+      <div class="kpi-sub" id="mBtcUsd">—</div>
+      <div class="kpi-src">CoinGecko</div>
+    </div>
+    <div class="card">
+      <h3>Oro (XAU)</h3>
+      <div class="kpi-value lg" id="mOroDop">—</div>
+      <div class="kpi-sub" id="mOroUsd">—</div>
+      <div class="kpi-src">DOP / troy oz</div>
+    </div>
+    <div class="card">
+      <h3>Plata (XAG)</h3>
+      <div class="kpi-value lg" id="mPlataDop">—</div>
+      <div class="kpi-sub" id="mPlataUsd">—</div>
+      <div class="kpi-src">DOP / troy oz</div>
+    </div>
+    <div class="card">
+      <h3>Petróleo WTI</h3>
+      <div class="kpi-value lg" id="mPetDop">—</div>
+      <div class="kpi-sub" id="mPetUsd">—</div>
+      <div class="kpi-src">DOP / barril · Yahoo Finance</div>
+    </div>
+  </div>
+
+  <hr class="sep" />
+
+  <p class="section-title" id="combustiblesTitle">Combustibles — precio por galón (DOP)</p>
+  <div class="grid kpis-lg" id="combustiblesKpis">
+    <div class="card"><h3>Gasolina Premium</h3><div class="kpi-value lg" id="mGasPremium">—</div><div class="kpi-sub">DOP / galón</div></div>
+    <div class="card"><h3>Gasolina Regular</h3><div class="kpi-value lg" id="mGasRegular">—</div><div class="kpi-sub">DOP / galón</div></div>
+    <div class="card"><h3>Gasoil Óptimo</h3><div class="kpi-value lg" id="mGasoilOp">—</div><div class="kpi-sub">DOP / galón</div></div>
+    <div class="card"><h3>Gasoil Regular</h3><div class="kpi-value lg" id="mGasoilReg">—</div><div class="kpi-sub">DOP / galón</div></div>
+    <div class="card"><h3>GLP (Propano)</h3><div class="kpi-value lg" id="mGlp">—</div><div class="kpi-sub">DOP / galón</div></div>
+    <div class="card"><h3>Kerosene / Avtur</h3><div class="kpi-value lg" id="mKerosene">—</div><div class="kpi-sub">DOP / galón</div></div>
+  </div>
+
+  <div class="small" id="mercadosUpdated" style="margin-top: 14px">—</div>
+
+</section>
+
 <div class="footer">
   Datos: <a href="https://desarrollador.sb.gob.do/" target="_blank" rel="noopener">API Estadísticas — Superintendencia de Bancos RD</a>.
-  La API key vive en variables de entorno del servidor.
+  Precios de mercado: Frankfurter/ECB, metals.live, CoinGecko, Yahoo Finance, MICM-RD.
 </div>
 
 </main>
@@ -368,53 +412,43 @@
 
 <script>
 /* ====================================================================== */
-/* 32 provincias de RD con centroides (lat, lng)                          */
+/* Catálogos                                                              */
 /* ====================================================================== */
 const PROVINCIAS = {
-  "DISTRITO NACIONAL":    [18.4861, -69.9312],
-  "AZUA":                 [18.4539, -70.7350],
-  "BAHORUCO":             [18.4881, -71.4128],
-  "BARAHONA":             [18.2086, -71.1027],
-  "DAJABÓN":              [19.5503, -71.7081],
-  "DUARTE":               [19.2986, -70.0356],
-  "ELÍAS PIÑA":           [18.8770, -71.7080],
-  "EL SEIBO":             [18.7642, -69.0394],
-  "ESPAILLAT":            [19.4333, -70.4000],
-  "HATO MAYOR":           [18.7642, -69.2581],
-  "HERMANAS MIRABAL":     [19.3736, -70.5006],
-  "INDEPENDENCIA":        [18.5500, -71.7500],
-  "LA ALTAGRACIA":        [18.5500, -68.6700],
-  "LA ROMANA":            [18.4275, -68.9728],
-  "LA VEGA":              [19.2222, -70.5286],
-  "MARÍA TRINIDAD SÁNCHEZ":[19.4000, -69.8500],
-  "MONSEÑOR NOUEL":       [18.9300, -70.4000],
-  "MONTE CRISTI":         [19.8500, -71.6500],
-  "MONTE PLATA":          [18.8000, -69.7833],
-  "PEDERNALES":           [17.8000, -71.5500],
-  "PERAVIA":              [18.4200, -70.3300],
-  "PUERTO PLATA":         [19.7892, -70.6928],
-  "SAMANÁ":               [19.2056, -69.3367],
-  "SAN CRISTÓBAL":        [18.4181, -70.1075],
-  "SAN JOSÉ DE OCOA":     [18.5500, -70.5000],
-  "SAN JUAN":             [18.8056, -71.2306],
-  "SAN PEDRO DE MACORÍS": [18.4622, -69.3000],
-  "SANCHEZ RAMÍREZ":      [19.0500, -70.1500],
-  "SANTIAGO":             [19.4517, -70.6986],
-  "SANTIAGO RODRÍGUEZ":   [19.4625, -71.3389],
-  "SANTO DOMINGO":        [18.5000, -69.8500],
-  "VALVERDE":             [19.5825, -70.7861],
+  "DISTRITO NACIONAL":     [18.4861,-69.9312], "AZUA":                  [18.4539,-70.7350],
+  "BAHORUCO":              [18.4881,-71.4128], "BARAHONA":              [18.2086,-71.1027],
+  "DAJABÓN":               [19.5503,-71.7081], "DUARTE":                [19.2986,-70.0356],
+  "ELÍAS PIÑA":            [18.8770,-71.7080], "EL SEIBO":              [18.7642,-69.0394],
+  "ESPAILLAT":             [19.4333,-70.4000], "HATO MAYOR":            [18.7642,-69.2581],
+  "HERMANAS MIRABAL":      [19.3736,-70.5006], "INDEPENDENCIA":         [18.5500,-71.7500],
+  "LA ALTAGRACIA":         [18.5500,-68.6700], "LA ROMANA":             [18.4275,-68.9728],
+  "LA VEGA":               [19.2222,-70.5286], "MARÍA TRINIDAD SÁNCHEZ":[19.4000,-69.8500],
+  "MONSEÑOR NOUEL":        [18.9300,-70.4000], "MONTE CRISTI":          [19.8500,-71.6500],
+  "MONTE PLATA":           [18.8000,-69.7833], "PEDERNALES":            [17.8000,-71.5500],
+  "PERAVIA":               [18.4200,-70.3300], "PUERTO PLATA":          [19.7892,-70.6928],
+  "SAMANÁ":                [19.2056,-69.3367], "SAN CRISTÓBAL":         [18.4181,-70.1075],
+  "SAN JOSÉ DE OCOA":      [18.5500,-70.5000], "SAN JUAN":              [18.8056,-71.2306],
+  "SAN PEDRO DE MACORÍS":  [18.4622,-69.3000], "SANCHEZ RAMÍREZ":       [19.0500,-70.1500],
+  "SANTIAGO":              [19.4517,-70.6986], "SANTIAGO RODRÍGUEZ":    [19.4625,-71.3389],
+  "SANTO DOMINGO":         [18.5000,-69.8500], "VALVERDE":              [19.5825,-70.7861],
 };
 
-/* ====================================================================== */
-/* Catálogo de entidades EIF (nombres cortos por tipo)                    */
-/* ====================================================================== */
 const ENTIDADES_EIF = [
-  ["BM", "Bancos Múltiples", ["BHD LEON","POPULAR","BANRESERVAS","SCOTIABANK","ACTIVO","ADEMI","BANCAMERICA","BANESCO","BDI","BELLBANK","CARIBE","CITIBANK","LAFISE","LOPEZ DE HARO","PROMERICA","SANTA CRUZ","VIMENCA"]],
-  ["BAyC","Bancos de Ahorro y Crédito",["ADOPEM","ATLANTICO","BANCO BACC","BANCOTUI","BANFONDESA","BONANZA","COFACI","CONFISA","EMPIRE","FIHOGAR","GRUFICORP","JMMB","MOTOR CREDITO","UNION"]],
-  ["AAyP","Asociaciones de Ahorros y Préstamos",["ABONAP","ALAVER","APAP","CIBAO","DUARTE","LA NACIONAL","MAGUANA","MOCANA","PERAVIA","ROMANA"]],
-  ["CC",  "Corporaciones de Crédito",["LEASING CONFISA","MONUMENTAL","NORPRESA","OFICORP","OPTIMA","REIDCO"]],
-  ["EP",  "Entidades Públicas",["BANCO AGRICOLA","BANDEX"]],
+  ["BM",   "Bancos Múltiples",              ["BHD LEON","POPULAR","BANRESERVAS","SCOTIABANK","ACTIVO","ADEMI","BANCAMERICA","BANESCO","BDI","BELLBANK","CARIBE","CITIBANK","LAFISE","LOPEZ DE HARO","PROMERICA","SANTA CRUZ","VIMENCA"]],
+  ["BAyC", "Bancos de Ahorro y Crédito",    ["ADOPEM","ATLANTICO","BANCO BACC","BANCOTUI","BANFONDESA","BONANZA","COFACI","CONFISA","EMPIRE","FIHOGAR","GRUFICORP","JMMB","MOTOR CREDITO","UNION"]],
+  ["AAyP", "Asociaciones de Ahorros y Préstamos", ["ABONAP","ALAVER","APAP","CIBAO","DUARTE","LA NACIONAL","MAGUANA","MOCANA","PERAVIA","ROMANA"]],
+  ["CC",   "Corporaciones de Crédito",      ["LEASING CONFISA","MONUMENTAL","NORPRESA","OFICORP","OPTIMA","REIDCO"]],
+  ["EP",   "Entidades Públicas",            ["BANCO AGRICOLA","BANDEX"]],
 ];
+
+/* ====================================================================== */
+/* Helpers de fecha                                                       */
+/* ====================================================================== */
+function prevMonth(ym) {
+  const [y, m] = ym.split("-").map(Number);
+  const d = new Date(y, m - 2, 1);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+}
 
 /* ====================================================================== */
 /* Cliente del API (vía /api proxy de Netlify Function)                   */
@@ -422,7 +456,7 @@ const ENTIDADES_EIF = [
 const SB = {
   base: "/api",
   cache: new Map(),
-  async get(path, params={}) {
+  async get(path, params = {}) {
     const qs = new URLSearchParams();
     for (const [k, v] of Object.entries(params)) {
       if (v == null || v === "") continue;
@@ -438,9 +472,9 @@ const SB = {
       const msg = (body && body.Message) || `HTTP ${r.status}`;
       throw new Error(msg);
     }
-    const data = (body && Array.isArray(body)) ? body
-               : (body && body.Data) ? body.Data
-               : (body && body.Succeeded === false ? [] : body);
+    const data = Array.isArray(body) ? body
+                : (body && body.Data) ? body.Data
+                : (body && body.Succeeded === false ? [] : body);
     this.cache.set(url, data);
     return data;
   },
@@ -455,13 +489,21 @@ const fmtCom = (v) => v == null ? "—" : fmtNum.format(Math.round(v));
 function fmtMM(v) {
   if (v == null || isNaN(v)) return "—";
   const abs = Math.abs(v);
-  if (abs >= 1e12) return (v/1e12).toFixed(2) + " B";
-  if (abs >= 1e9)  return (v/1e9).toFixed(2)  + " MM";
-  if (abs >= 1e6)  return (v/1e6).toFixed(2)  + " M";
-  if (abs >= 1e3)  return (v/1e3).toFixed(1)  + " K";
+  if (abs >= 1e12) return (v / 1e12).toFixed(2) + " B";
+  if (abs >= 1e9)  return (v / 1e9).toFixed(2)  + " MM";
+  if (abs >= 1e6)  return (v / 1e6).toFixed(2)  + " M";
+  if (abs >= 1e3)  return (v / 1e3).toFixed(1)  + " K";
   return fmtNum.format(v);
 }
-const pct = (v, d=2) => v == null ? "—" : Number(v).toFixed(d) + "%";
+const pct = (v, d = 2) => v == null ? "—" : Number(v).toFixed(d) + "%";
+function fmtDOP(v) {
+  if (v == null || isNaN(v)) return "—";
+  return "RD$ " + fmtNum.format(Math.round(v));
+}
+function fmtDOPDec(v, d = 2) {
+  if (v == null || isNaN(v)) return "—";
+  return "RD$ " + Number(v).toLocaleString("es-DO", { minimumFractionDigits: d, maximumFractionDigits: d });
+}
 
 const PALETTE = ["#2c6df0","#7b4dd6","#0aa3ad","#16a36a","#d68a16","#d73a4f",
                  "#5e8df2","#a07ee0","#34b8c2","#3ab47b","#dba744","#df5e70",
@@ -471,8 +513,8 @@ function chartCommon() {
   return {
     responsive: true, maintainAspectRatio: false,
     plugins: {
-      legend: { labels: { color: "#1a2540", font:{size:11} } },
-      tooltip: { backgroundColor:"#1a2540", titleColor:"#fff", bodyColor:"#fff", borderColor:"#243155", borderWidth:1 },
+      legend: { labels: { color: "#1a2540", font: { size: 11 } } },
+      tooltip: { backgroundColor: "#1a2540", titleColor: "#fff", bodyColor: "#fff", borderColor: "#243155", borderWidth: 1 },
     },
     scales: {
       x: { ticks: { color: "#6c7b95" }, grid: { color: "#e8eef7" } },
@@ -482,26 +524,42 @@ function chartCommon() {
 }
 
 /* ====================================================================== */
-/* Estado                                                                 */
+/* Estado global                                                          */
 /* ====================================================================== */
 const state = {
   periodoInicial: "",
   periodoFinal: "",
-  selectedEntities: new Set(),  // vacío => TODOS
+  selectedEntities: new Set(),   // vacío = mostrar todo
   charts: {},
-  data: {},  // raw responses por endpoint
-  lastFilterKey: "",
+  data: {
+    // Resumen (sistema agregado — no filtrable por entidad)
+    indicadoresPrincipales: [],
+    morosidadEstresada: [],
+    // Cartera (filtrable)
+    carteraTipo: [], carteraSectores: [], carteraMoneda: [],
+    carteraGenero: [], carteraRiesgo: [], carteraFacilidad: [],
+    // Captaciones (filtrable)
+    captacionesMoneda: [], captacionesSector: [],
+    // Comparativa (filtrable)
+    indicadoresFinancieros: [],
+    // Mapa (filtrable)
+    carteraLocalidad: [], captacionesLocalidad: [],
+    // Estados (filtrable)
+    estadoSituacion: [], estadoResultados: [],
+    // Reclamaciones (filtrable)
+    reclamaciones: [],
+    // Mercados (no filtrable — precios de mercado globales)
+    mercados: null,
+  },
 };
 
 /* ====================================================================== */
-/* PRELOADER (overlay con animación de progreso)                          */
+/* PRELOADER                                                              */
 /* ====================================================================== */
 const Preloader = {
   steps: [],
   el: null,
-  init() {
-    this.el = document.getElementById("preloader");
-  },
+  init() { this.el = document.getElementById("preloader"); },
   setSteps(steps) {
     this.steps = steps.map((s, i) => ({ ...s, status: "pending", i }));
     this.render();
@@ -511,48 +569,60 @@ const Preloader = {
     this.render();
   },
   render() {
-    const ul = document.getElementById("stepList");
-    ul.innerHTML = this.steps.map(s =>
+    document.getElementById("stepList").innerHTML = this.steps.map(s =>
       `<li class="${s.status}"><span class="dot"></span>${s.label}</li>`
     ).join("");
     const total = this.steps.length;
-    const done = this.steps.filter(s => s.status === "done" || s.status === "error").length;
-    const pct = total ? Math.round(done / total * 100) : 0;
-    document.getElementById("progressFill").style.width = pct + "%";
+    const done  = this.steps.filter(s => s.status === "done" || s.status === "error").length;
+    const p = total ? Math.round(done / total * 100) : 0;
+    document.getElementById("progressFill").style.width = p + "%";
     document.getElementById("progressText").textContent = `${done} / ${total}`;
-    document.getElementById("progressPct").textContent = pct + "%";
+    document.getElementById("progressPct").textContent  = p + "%";
     const active = this.steps.find(s => s.status === "active");
     document.getElementById("preloaderSub").textContent = active
       ? active.label
-      : (done === total ? "Listo." : "Consultando datos del Sistema Financiero…");
+      : (done === total ? "Listo." : "Consultando datos…");
   },
   show() { this.el.classList.remove("hidden"); },
   hide() { setTimeout(() => this.el.classList.add("hidden"), 250); },
 };
 
 /* ====================================================================== */
-/* Helpers para llamadas con manejo de errores                            */
+/* Capa de datos — helpers                                                */
 /* ====================================================================== */
-function baseParams(extra={}) {
-  const p = {
+
+/** Parámetros base para cargar TODO (sin filtro de entidad) */
+function allParams(extra = {}) {
+  return {
     periodoInicial: state.periodoInicial,
-    periodoFinal: state.periodoFinal,
-    paginas: 1, registros: 1000,
-  };
-  if (state.selectedEntities.size > 0) p.entidad = [...state.selectedEntities];
-  else p.tipoEntidad = "BM";   // default razonable: bancos múltiples (no todos para evitar timeouts)
-  return Object.assign(p, extra);
-}
-function latestParams(extra={}) {
-  const p = {
-    periodoInicial: state.periodoFinal,
     periodoFinal:   state.periodoFinal,
-    paginas: 1, registros: 1000,
+    paginas: 1, registros: 5000,
+    ...extra,
   };
-  if (state.selectedEntities.size > 0) p.entidad = [...state.selectedEntities];
-  else p.tipoEntidad = "BM";
-  return Object.assign(p, extra);
 }
+
+/** Busca la última fecha con datos disponibles, sin filtro de entidad */
+async function getLatestAll(path, extra = {}) {
+  let period = state.periodoFinal;
+  for (let i = 0; i < 6; i++) {
+    const data = await safeGet(path, {
+      periodoInicial: period, periodoFinal: period,
+      paginas: 1, registros: 5000,
+      ...extra,
+    });
+    if (data?.length) return data;
+    period = prevMonth(period);
+  }
+  return [];
+}
+
+/** Filtra filas por entidades seleccionadas (client-side) */
+function filterRows(rows) {
+  if (!rows?.length) return [];
+  if (state.selectedEntities.size === 0) return rows;
+  return rows.filter(r => !r.entidad || state.selectedEntities.has(r.entidad));
+}
+
 function safeGet(path, params) {
   return SB.get(path, params).catch(err => {
     console.warn("API error", path, err.message);
@@ -560,29 +630,8 @@ function safeGet(path, params) {
   });
 }
 
-/**
- * Para "snapshot" de un solo mes: intenta state.periodoFinal y si viene vacío
- * retrocede hasta 6 meses buscando data. Devuelve los rows encontrados (o []).
- */
-async function safeGetLatest(path, extraParams = {}) {
-  let testPeriod = state.periodoFinal;
-  for (let i = 0; i < 6; i++) {
-    const params = {
-      periodoInicial: testPeriod, periodoFinal: testPeriod,
-      paginas: 1, registros: 1000,
-      ...extraParams,
-    };
-    if (state.selectedEntities.size > 0) params.entidad = [...state.selectedEntities];
-    else if (!params.tipoEntidad) params.tipoEntidad = "BM";
-    const data = await safeGet(path, params);
-    if (data && data.length) return data;
-    testPeriod = prevMonth(testPeriod);
-  }
-  return [];
-}
-
 /* ====================================================================== */
-/* Charts helpers                                                         */
+/* Chart helpers                                                          */
 /* ====================================================================== */
 function destroyChart(id) {
   if (state.charts[id]) { state.charts[id].destroy(); delete state.charts[id]; }
@@ -598,28 +647,30 @@ function aggDonut(canvasId, rows, dimKey, valKey) {
   const buckets = {};
   for (const r of (rows || [])) {
     const k = r[dimKey] || "—";
-    buckets[k] = (buckets[k]||0) + (r[valKey]||0);
+    buckets[k] = (buckets[k] || 0) + (r[valKey] || 0);
   }
-  const entries = Object.entries(buckets).sort((a,b)=>b[1]-a[1]);
+  const entries = Object.entries(buckets).sort((a, b) => b[1] - a[1]);
   if (!entries.length) return showEmpty(canvasId);
+  clearEmpty(canvasId);
   makeChart(canvasId, {
-    type:"doughnut",
-    data:{ labels: entries.map(e=>e[0]), datasets:[{ data: entries.map(e=>e[1]), backgroundColor: PALETTE }]},
+    type: "doughnut",
+    data: { labels: entries.map(e => e[0]), datasets: [{ data: entries.map(e => e[1]), backgroundColor: PALETTE }] },
     options: chartCommon(),
   });
 }
 function aggBarTop(canvasId, rows, dimKey, valKey, topN) {
   const buckets = {};
-  for (const r of (rows||[])) {
+  for (const r of (rows || [])) {
     const k = r[dimKey] || "—";
-    buckets[k] = (buckets[k]||0) + (r[valKey]||0);
+    buckets[k] = (buckets[k] || 0) + (r[valKey] || 0);
   }
-  const entries = Object.entries(buckets).sort((a,b)=>b[1]-a[1]).slice(0, topN);
+  const entries = Object.entries(buckets).sort((a, b) => b[1] - a[1]).slice(0, topN);
   if (!entries.length) return showEmpty(canvasId);
+  clearEmpty(canvasId);
   makeChart(canvasId, {
-    type:"bar",
-    data:{ labels: entries.map(e=>e[0]), datasets:[{ label:"Total", data: entries.map(e=>e[1]), backgroundColor: PALETTE[0]}]},
-    options:{ ...chartCommon(), indexAxis: "y" }
+    type: "bar",
+    data: { labels: entries.map(e => e[0]), datasets: [{ label: "Total", data: entries.map(e => e[1]), backgroundColor: PALETTE[0] }] },
+    options: { ...chartCommon(), indexAxis: "y" },
   });
 }
 function showEmpty(canvasId) {
@@ -637,28 +688,124 @@ function showEmpty(canvasId) {
 function clearEmpty(canvasId) {
   const ctx = document.getElementById(canvasId);
   if (!ctx) return;
-  const empty = ctx.parentElement.querySelector(".empty");
-  if (empty) empty.remove();
+  const e = ctx.parentElement.querySelector(".empty");
+  if (e) e.remove();
+}
+function rankBar(id, rows, label, color) {
+  if (!rows.length) return showEmpty(id);
+  clearEmpty(id);
+  makeChart(id, {
+    type: "bar",
+    data: { labels: rows.map(r => r.entidad), datasets: [{ label, data: rows.map(r => r.valor), backgroundColor: color }] },
+    options: { ...chartCommon(), indexAxis: "y" },
+  });
 }
 
 /* ====================================================================== */
-/* Loaders por panel                                                      */
+/* ═══ FETCH LAYER — descarga todo sin filtro de entidad ═══             */
 /* ====================================================================== */
-async function loadResumen() {
-  // Indicadores principales (sistema agregado, no acepta filtro de entidad)
-  const data = await safeGet("/indicadores/principales", {
-    periodoInicial: state.periodoInicial,
-    periodoFinal: state.periodoFinal,
-    paginas: 1, registros: 200,
-  });
-  const sorted = (data || []).slice().sort((a,b)=>(a.periodo||"").localeCompare(b.periodo||""));
+
+async function fetchResumen() {
+  const [princ, me] = await Promise.all([
+    safeGet("/indicadores/principales", {
+      periodoInicial: state.periodoInicial,
+      periodoFinal:   state.periodoFinal,
+      paginas: 1, registros: 200,
+    }),
+    getLatestAll("/indicadores/morosidad-estresada"),
+  ]);
+  state.data.indicadoresPrincipales = princ || [];
+  state.data.morosidadEstresada     = me    || [];
+}
+
+async function fetchCartera() {
+  const [tipo, sec, mon, gen, rgo, fac] = await Promise.all([
+    getLatestAll("/carteras/creditos/tipo"),
+    getLatestAll("/carteras/creditos/sectores-economicos"),
+    getLatestAll("/carteras/creditos/moneda"),
+    getLatestAll("/carteras/creditos/genero"),
+    getLatestAll("/carteras/creditos/clasificacion-riesgo"),
+    getLatestAll("/carteras/creditos/facilidad"),
+  ]);
+  state.data.carteraTipo      = tipo;
+  state.data.carteraSectores  = sec;
+  state.data.carteraMoneda    = mon;
+  state.data.carteraGenero    = gen;
+  state.data.carteraRiesgo    = rgo;
+  state.data.carteraFacilidad = fac;
+}
+
+async function fetchCaptaciones() {
+  const [mon, sec] = await Promise.all([
+    getLatestAll("/captaciones/moneda"),
+    getLatestAll("/captaciones/sector-depositante"),
+  ]);
+  state.data.captacionesMoneda  = mon;
+  state.data.captacionesSector  = sec;
+}
+
+async function fetchComparativa() {
+  const indicadores = [
+    "ROA (Rentabilidad de los Activos)",
+    "Indice de Solvencia",
+    "Cartera de Créditos Vencida (Capital y Rendimientos) / Total de Cartera de Crédito Bruta",
+    "Total Patrimonio Neto",
+  ];
+  let data = [];
+  let period = state.periodoFinal;
+  for (let i = 0; i < 18 && !data.length; i++) {
+    data = await safeGet("/indicadores/financieros", {
+      periodoInicial: period, periodoFinal: period,
+      paginas: 1, registros: 5000,
+      indicador: indicadores,
+    });
+    if (!data.length) period = prevMonth(period);
+  }
+  state.data.indicadoresFinancieros = data;
+}
+
+async function fetchMapa() {
+  const [cartera, capt] = await Promise.all([
+    getLatestAll("/carteras/creditos/localidad"),
+    getLatestAll("/captaciones/localidad"),
+  ]);
+  state.data.carteraLocalidad     = cartera;
+  state.data.captacionesLocalidad = capt;
+}
+
+async function fetchEstados() {
+  const [sit, res] = await Promise.all([
+    safeGet("/estados/situacion/eif", allParams()),
+    getLatestAll("/estados/resultados/eif"),
+  ]);
+  state.data.estadoSituacion  = sit || [];
+  state.data.estadoResultados = res || [];
+}
+
+async function fetchReclamaciones() {
+  state.data.reclamaciones = await getLatestAll("/reclamaciones/eif");
+}
+
+async function fetchMercados() {
+  const data = await safeGet("/mercados", {});
+  // El endpoint retorna un objeto, no un array
+  state.data.mercados = (data && !Array.isArray(data)) ? data : null;
+}
+
+/* ====================================================================== */
+/* ═══ RENDER LAYER — filtra in-memory y dibuja charts ═══               */
+/* ====================================================================== */
+
+function renderResumen() {
+  const sorted = (state.data.indicadoresPrincipales || [])
+    .slice().sort((a, b) => (a.periodo || "").localeCompare(b.periodo || ""));
   const last = sorted[sorted.length - 1];
   if (last) {
-    document.getElementById("kpiActivos").textContent  = fmtMM(last.activos);
-    document.getElementById("kpiSolvencia").textContent = pct(last.solvencia);
-    document.getElementById("kpiCartera").textContent  = fmtMM(last.montoCarteraCredito * 1e6);
-    document.getElementById("kpiMorosidad").textContent = pct(last.morosidad);
-    document.getElementById("kpiRoa").textContent       = pct(last.roa);
+    document.getElementById("kpiActivos").textContent    = fmtMM(last.activos);
+    document.getElementById("kpiSolvencia").textContent  = pct(last.solvencia);
+    document.getElementById("kpiCartera").textContent    = fmtMM(last.montoCarteraCredito * 1e6);
+    document.getElementById("kpiMorosidad").textContent  = pct(last.morosidad);
+    document.getElementById("kpiRoa").textContent        = pct(last.roa);
     document.getElementById("kpiTasaActiva").textContent = pct(last.tasaActiva);
     document.getElementById("kpiTasaPasiva").textContent = pct(last.tasaPasiva);
     document.getElementById("kpiMargen").textContent     = pct(last.margen);
@@ -668,46 +815,43 @@ async function loadResumen() {
     makeChart("chartTrendActivos", {
       type: "line",
       data: { labels, datasets: [
-        { label: "Activos (DOP)", data: sorted.map(d => d.activos), borderColor: PALETTE[0], backgroundColor:PALETTE[0]+"33", tension:.3, yAxisID:"y" },
-        { label: "Cartera (mill. DOP)", data: sorted.map(d => d.montoCarteraCredito), borderColor: PALETTE[2], backgroundColor:PALETTE[2]+"33", tension:.3, yAxisID:"y2" },
+        { label: "Activos (DOP)", data: sorted.map(d => d.activos), borderColor: PALETTE[0], backgroundColor: PALETTE[0] + "33", tension: .3, yAxisID: "y" },
+        { label: "Cartera (mill. DOP)", data: sorted.map(d => d.montoCarteraCredito), borderColor: PALETTE[2], backgroundColor: PALETTE[2] + "33", tension: .3, yAxisID: "y2" },
       ] },
-      options: { ...chartCommon(),
-        scales: { ...chartCommon().scales,
-          y:  { ...chartCommon().scales.y, position:"left",  title:{display:true,text:"Activos",color:"#6c7b95"}},
-          y2: { ...chartCommon().scales.y, position:"right", grid:{drawOnChartArea:false}, title:{display:true,text:"Cartera (mill.)",color:"#6c7b95"}},
-        } },
+      options: { ...chartCommon(), scales: { ...chartCommon().scales,
+        y:  { ...chartCommon().scales.y,  position: "left",  title: { display: true, text: "Activos",       color: "#6c7b95" } },
+        y2: { ...chartCommon().scales.y2, position: "right", grid: { drawOnChartArea: false }, title: { display: true, text: "Cartera (mill.)", color: "#6c7b95" } },
+      } },
     });
     makeChart("chartTrendRatios", {
       type: "line",
       data: { labels, datasets: [
-        { label:"Solvencia", data: sorted.map(d => d.solvencia), borderColor:PALETTE[3], tension:.3 },
-        { label:"ROA",       data: sorted.map(d => d.roa),       borderColor:PALETTE[0], tension:.3 },
-        { label:"Morosidad", data: sorted.map(d => d.morosidad), borderColor:PALETTE[5], tension:.3 },
-      ] }, options: chartCommon(),
+        { label: "Solvencia", data: sorted.map(d => d.solvencia), borderColor: PALETTE[3], tension: .3 },
+        { label: "ROA",       data: sorted.map(d => d.roa),       borderColor: PALETTE[0], tension: .3 },
+        { label: "Morosidad", data: sorted.map(d => d.morosidad), borderColor: PALETTE[5], tension: .3 },
+      ] },
+      options: chartCommon(),
     });
     makeChart("chartTasas", {
       type: "line",
       data: { labels, datasets: [
-        { label:"Tasa activa", data: sorted.map(d=>d.tasaActiva), borderColor:PALETTE[0], tension:.3 },
-        { label:"Tasa pasiva", data: sorted.map(d=>d.tasaPasiva), borderColor:PALETTE[1], tension:.3 },
-        { label:"Margen",      data: sorted.map(d=>d.margen),     borderColor:PALETTE[4], tension:.3 },
-      ] }, options: chartCommon(),
+        { label: "Tasa activa", data: sorted.map(d => d.tasaActiva), borderColor: PALETTE[0], tension: .3 },
+        { label: "Tasa pasiva", data: sorted.map(d => d.tasaPasiva), borderColor: PALETTE[1], tension: .3 },
+        { label: "Margen",      data: sorted.map(d => d.margen),     borderColor: PALETTE[4], tension: .3 },
+      ] },
+      options: chartCommon(),
     });
   }
-
-  // Morosidad estresada
-  const me = await safeGetLatest("/indicadores/morosidad-estresada");
-  const lastME = (me || []).slice().sort((a,b)=>(a.periodo||"").localeCompare(b.periodo||"")).pop();
+  const me    = state.data.morosidadEstresada || [];
+  const lastME = me.slice().sort((a, b) => (a.periodo || "").localeCompare(b.periodo || "")).pop();
   if (lastME) {
     const fields = ["vencido","cobranza","tc31a60","reestructuradoRea","reestructuradoTemporal","castigos","adjudicado"];
-    const labels = ["Vencido","Cobranza judicial","TC 31-60d","Reestruc. REA","Reestruc. temporal","Castigos","Adjudicado"];
+    const labs   = ["Vencido","Cobranza judicial","TC 31-60d","Reestruc. REA","Reestruc. temporal","Castigos","Adjudicado"];
+    clearEmpty("chartMorosidadEstresada");
     makeChart("chartMorosidadEstresada", {
       type: "bar",
-      data: { labels, datasets: [{
-        label: `${lastME.periodo} — % cartera total`,
-        data: fields.map(f => (lastME[f] / lastME.carteraTotal) * 100),
-        backgroundColor: PALETTE,
-      }] },
+      data: { labels: labs, datasets: [{ label: `${lastME.periodo} — % cartera total`,
+        data: fields.map(f => (lastME[f] / lastME.carteraTotal) * 100), backgroundColor: PALETTE }] },
       options: { ...chartCommon(), indexAxis: "y" },
     });
   } else {
@@ -715,237 +859,287 @@ async function loadResumen() {
   }
 }
 
-async function loadCartera() {
-  const [tipo, sec, mon, gen, rgo, fac] = await Promise.all([
-    safeGetLatest("/carteras/creditos/tipo"),
-    safeGetLatest("/carteras/creditos/sectores-economicos"),
-    safeGetLatest("/carteras/creditos/moneda"),
-    safeGetLatest("/carteras/creditos/genero"),
-    safeGetLatest("/carteras/creditos/clasificacion-riesgo"),
-    safeGetLatest("/carteras/creditos/facilidad"),
-  ]);
-  aggDonut("chartCarteraTipo", tipo, "tipoCartera", "deuda");
-  aggBarTop("chartCarteraSector", sec, "sectorEconomico", "deuda", 12);
-  aggDonut("chartCarteraMoneda", mon, "tipoMoneda", "deuda");
-  aggDonut("chartCarteraGenero", gen, "genero", "deuda");
-  aggBarTop("chartCarteraRiesgo", rgo, "clasificacionRiesgo", "deuda", 10);
-  aggBarTop("chartCarteraFacilidad", fac, "facilidad", "deuda", 12);
+function renderCartera() {
+  const f = filterRows;
+  aggDonut("chartCarteraTipo",      f(state.data.carteraTipo),      "tipoCartera",          "deuda");
+  aggBarTop("chartCarteraSector",   f(state.data.carteraSectores),  "sectorEconomico",       "deuda", 12);
+  aggDonut("chartCarteraMoneda",    f(state.data.carteraMoneda),    "tipoMoneda",            "deuda");
+  aggDonut("chartCarteraGenero",    f(state.data.carteraGenero),    "genero",                "deuda");
+  aggBarTop("chartCarteraRiesgo",   f(state.data.carteraRiesgo),   "clasificacionRiesgo",   "deuda", 10);
+  aggBarTop("chartCarteraFacilidad",f(state.data.carteraFacilidad),"facilidad",              "deuda", 12);
 }
 
-async function loadCaptaciones() {
-  const [mon, sec] = await Promise.all([
-    safeGetLatest("/captaciones/moneda"),
-    safeGetLatest("/captaciones/sector-depositante"),
-  ]);
-  aggBarTop("chartCaptMoneda", mon, "instrumentoCaptacion", "balance", 14);
-  // Combinar dimensiones
+function renderCaptaciones() {
+  const f = filterRows;
+  aggBarTop("chartCaptMoneda", f(state.data.captacionesMoneda), "instrumentoCaptacion", "balance", 14);
+  const sec = f(state.data.captacionesSector);
   const buckets = {};
-  for (const r of (sec || [])) {
-    const k = `${r.publicoPrivado||"?"} / ${r.financieroNoFinanciero||"?"}`;
-    buckets[k] = (buckets[k]||0) + (r.balance||0);
+  for (const r of sec) {
+    const k = `${r.publicoPrivado || "?"} / ${r.financieroNoFinanciero || "?"}`;
+    buckets[k] = (buckets[k] || 0) + (r.balance || 0);
   }
-  const entries = Object.entries(buckets).sort((a,b)=>b[1]-a[1]);
+  const entries = Object.entries(buckets).sort((a, b) => b[1] - a[1]);
   if (entries.length) {
+    clearEmpty("chartCaptSector");
     makeChart("chartCaptSector", {
-      type:"bar",
-      data:{ labels: entries.map(e=>e[0]), datasets:[{ label:"Balance", data: entries.map(e=>e[1]), backgroundColor:PALETTE }]},
-      options:{ ...chartCommon(), indexAxis:"y" }
+      type: "bar",
+      data: { labels: entries.map(e => e[0]), datasets: [{ label: "Balance", data: entries.map(e => e[1]), backgroundColor: PALETTE }] },
+      options: { ...chartCommon(), indexAxis: "y" },
     });
-  } else { showEmpty("chartCaptSector"); }
+  } else {
+    showEmpty("chartCaptSector");
+  }
 }
 
-async function loadComparativa() {
+function renderComparativa() {
+  const data = filterRows(state.data.indicadoresFinancieros);
+  if (!data.length) {
+    ["chartRankRoa","chartRankSolv","chartRankMoro","chartRankPat"].forEach(showEmpty);
+    return;
+  }
   const indicadores = [
     "ROA (Rentabilidad de los Activos)",
     "Indice de Solvencia",
     "Cartera de Créditos Vencida (Capital y Rendimientos) / Total de Cartera de Crédito Bruta",
     "Total Patrimonio Neto",
   ];
-  // Probamos el último mes; si está vacío vamos retrocediendo hasta 18 meses
-  let data = [];
-  let testPeriod = state.periodoFinal;
-  for (let i = 0; i < 18 && !data.length; i++) {
-    data = await safeGet("/indicadores/financieros", {
-      periodoInicial: testPeriod, periodoFinal: testPeriod,
-      paginas: 1, registros: 1000,
-      tipoEntidad: state.selectedEntities.size ? undefined : "BM",
-      entidad: state.selectedEntities.size ? [...state.selectedEntities] : undefined,
-      indicador: indicadores,
-    });
-    if (!data.length) testPeriod = prevMonth(testPeriod);
-  }
-  if (!data.length) {
-    ["chartRankRoa","chartRankSolv","chartRankMoro","chartRankPat"].forEach(showEmpty);
-    return;
-  }
   const grab = (n) => data.filter(r => r.indicador === n).map(r => ({ entidad: r.entidad, valor: r.valor }));
-  rankBar("chartRankRoa",  grab(indicadores[0]).sort((a,b)=>b.valor-a.valor).slice(0, 18), "ROA %",       PALETTE[3]);
-  rankBar("chartRankSolv", grab(indicadores[1]).sort((a,b)=>b.valor-a.valor).slice(0, 18), "Solvencia %", PALETTE[0]);
-  rankBar("chartRankMoro", grab(indicadores[2]).sort((a,b)=>a.valor-b.valor).slice(0, 18), "Morosidad %", PALETTE[5]);
-  rankBar("chartRankPat",  grab(indicadores[3]).sort((a,b)=>b.valor-a.valor).slice(0, 18), "Patrimonio Neto", PALETTE[1]);
-}
-function prevMonth(ym) {
-  const [y,m] = ym.split("-").map(Number);
-  const d = new Date(y, m-2, 1); // m-1 es el mes actual; -1 más para retroceder
-  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;
-}
-function rankBar(id, rows, label, color) {
-  if (!rows.length) return showEmpty(id);
-  makeChart(id, {
-    type:"bar",
-    data:{ labels: rows.map(r=>r.entidad),
-           datasets:[{ label, data: rows.map(r=>r.valor), backgroundColor: color }]},
-    options:{ ...chartCommon(), indexAxis:"y" }
-  });
+  rankBar("chartRankRoa",  grab(indicadores[0]).sort((a, b) => b.valor - a.valor).slice(0, 18), "ROA %",       PALETTE[3]);
+  rankBar("chartRankSolv", grab(indicadores[1]).sort((a, b) => b.valor - a.valor).slice(0, 18), "Solvencia %", PALETTE[0]);
+  rankBar("chartRankMoro", grab(indicadores[2]).sort((a, b) => a.valor - b.valor).slice(0, 18), "Morosidad %", PALETTE[5]);
+  rankBar("chartRankPat",  grab(indicadores[3]).sort((a, b) => b.valor - a.valor).slice(0, 18), "Patrimonio",  PALETTE[1]);
 }
 
+// Mapa — instancias persistentes
 let mapInstance = null;
-let mapLayer = null;
-async function loadMapa() {
+let mapLayer    = null;
+
+function renderMapa() {
+  const secEl = document.querySelector('section[data-pane="mapa"]');
+  const wasHidden = secEl.hidden;
+  if (wasHidden) secEl.hidden = false;
+
   if (!mapInstance) {
-    mapInstance = L.map('map', { zoomControl: true, attributionControl: false }).setView([18.7, -70.2], 8);
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png', {
-      maxZoom: 18, attribution: '&copy; OSM &copy; CARTO'
+    mapInstance = L.map("map", { zoomControl: true, attributionControl: false }).setView([18.7, -70.2], 8);
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png", {
+      maxZoom: 18, attribution: "&copy; OSM &copy; CARTO",
     }).addTo(mapInstance);
   }
-  const metric = document.getElementById("mapMetric").value;
-  const path = metric === "cartera" ? "/carteras/creditos/localidad" : "/captaciones/localidad";
+
+  const metric   = document.getElementById("mapMetric").value;
+  const rawData  = metric === "cartera" ? state.data.carteraLocalidad : state.data.captacionesLocalidad;
   const valField = metric === "cartera" ? "deuda" : "balance";
-  const data = await safeGetLatest(path);
+  const data     = filterRows(rawData);
+
   const sums = {};
-  for (const r of (data||[])) {
+  for (const r of (data || [])) {
     const k = (r.provincia || "").toUpperCase().trim();
-    sums[k] = (sums[k]||0) + (r[valField]||0);
+    sums[k] = (sums[k] || 0) + (r[valField] || 0);
   }
+
   if (mapLayer) { mapInstance.removeLayer(mapLayer); mapLayer = null; }
+
   const values = Object.values(sums).filter(v => v > 0);
-  if (!values.length) return;
+  if (!values.length) {
+    if (wasHidden) secEl.hidden = true;
+    return;
+  }
   const max = Math.max(...values);
   const min = Math.min(...values);
   const group = L.featureGroup();
   for (const [name, [lat, lng]] of Object.entries(PROVINCIAS)) {
     const v = sums[name] || 0;
-    if (v === 0) continue;
-    const t = max === min ? 0.5 : (v - min) / (max - min);
-    const radius = 8 + t * 32; // 8–40 px
-    const c1 = [44,109,240], c2=[123,77,214];
-    const mix = (a,b,tt) => a.map((x,i)=>Math.round(x+(b[i]-x)*tt));
-    const rgb = mix(c1, c2, t);
-    const color = `rgb(${rgb.join(",")})`;
-    const m = L.circleMarker([lat, lng], {
-      radius, color: "#fff", weight: 2, fillColor: color, fillOpacity: 0.85,
-    });
-    m.bindTooltip(`<b>${name}</b><br/>${metric}: ${fmtMM(v)} DOP`, { sticky: true });
-    m.addTo(group);
+    if (!v) continue;
+    const t  = max === min ? 0.5 : (v - min) / (max - min);
+    const r  = 8 + t * 32;
+    const c1 = [44,109,240], c2 = [123,77,214];
+    const rgb = c1.map((x, i) => Math.round(x + (c2[i] - x) * t));
+    L.circleMarker([lat, lng], { radius: r, color: "#fff", weight: 2, fillColor: `rgb(${rgb.join(",")})`, fillOpacity: 0.85 })
+     .bindTooltip(`<b>${name}</b><br/>${metric}: ${fmtMM(v)} DOP`, { sticky: true })
+     .addTo(group);
   }
   mapLayer = group.addTo(mapInstance);
-  try { mapInstance.fitBounds(group.getBounds(), { padding: [30, 30] }); } catch(e){}
-}
-document.addEventListener("change", e => {
-  if (e.target.id === "mapMetric") loadMapa().catch(err => console.error(err));
-});
+  try { mapInstance.fitBounds(group.getBounds(), { padding: [30, 30] }); } catch {}
+  mapInstance.invalidateSize();
 
-async function loadEstados() {
-  // El balance trend usa el rango completo
-  const sit = await safeGet("/estados/situacion/eif", baseParams());
-  const periods = [...new Set((sit||[]).map(r=>r.periodo))].sort();
-  const groups = ["Activos","Pasivos","Patrimonio"];
-  const series = groups.map((g, i) => ({
-    label: g, borderColor: PALETTE[i], backgroundColor: PALETTE[i]+"22", tension:.3, fill: false,
-    data: periods.map(p => (sit||[]).filter(r => r.periodo === p && (r.conceptoNivel1||"").toLowerCase().startsWith(g.toLowerCase()))
-      .reduce((s,r)=>s+(r.valor||0), 0)),
+  if (wasHidden) secEl.hidden = true;
+}
+
+function renderEstados() {
+  const sit = filterRows(state.data.estadoSituacion);
+  const periods = [...new Set(sit.map(r => r.periodo))].sort();
+  const groups  = ["Activos","Pasivos","Patrimonio"];
+  const series  = groups.map((g, i) => ({
+    label: g, borderColor: PALETTE[i], backgroundColor: PALETTE[i] + "22", tension: .3, fill: false,
+    data: periods.map(p => sit.filter(r => r.periodo === p && (r.conceptoNivel1 || "").toLowerCase().startsWith(g.toLowerCase()))
+                              .reduce((s, r) => s + (r.valor || 0), 0)),
   }));
   if (periods.length) {
-    makeChart("chartBalanceTrend", { type:"line", data:{ labels: periods, datasets: series }, options: chartCommon() });
+    clearEmpty("chartBalanceTrend");
+    makeChart("chartBalanceTrend", { type: "line", data: { labels: periods, datasets: series }, options: chartCommon() });
   } else {
     showEmpty("chartBalanceTrend");
   }
 
-  const res = await safeGetLatest("/estados/resultados/eif");
-  const lastP = [...new Set((res||[]).map(r=>r.periodo))].sort().pop();
-  const filtered = (res||[]).filter(r => r.periodo === lastP);
-  const byN2 = {};
-  for (const r of filtered) {
+  const res   = filterRows(state.data.estadoResultados);
+  const lastP = [...new Set(res.map(r => r.periodo))].sort().pop();
+  const byN2  = {};
+  for (const r of res.filter(x => x.periodo === lastP)) {
     const k = r.conceptoNivel2 || r.conceptoNivel1 || "—";
-    byN2[k] = (byN2[k]||0) + (r.valor||0);
+    byN2[k] = (byN2[k] || 0) + (r.valor || 0);
   }
-  const rows = Object.entries(byN2).sort((a,b)=>Math.abs(b[1])-Math.abs(a[1])).slice(0,20);
-  document.getElementById("resultadosTbl").innerHTML = rows.length ? `
-    <table class="data">
-      <thead><tr><th>Concepto</th><th class="num">Valor (${lastP||""})</th></tr></thead>
-      <tbody>${rows.map(([k,v])=>`<tr><td>${k}</td><td class="num">${fmtCom(v)}</td></tr>`).join("")}</tbody>
-    </table>` : `<div class="empty"><div class="icon">∅</div>Sin datos</div>`;
+  const rows = Object.entries(byN2).sort((a, b) => Math.abs(b[1]) - Math.abs(a[1])).slice(0, 20);
+  document.getElementById("resultadosTbl").innerHTML = rows.length
+    ? `<table class="data"><thead><tr><th>Concepto</th><th class="num">Valor (${lastP || ""})</th></tr></thead>
+       <tbody>${rows.map(([k, v]) => `<tr><td>${k}</td><td class="num">${fmtCom(v)}</td></tr>`).join("")}</tbody></table>`
+    : `<div class="empty"><div class="icon">∅</div>Sin datos</div>`;
 }
 
-async function loadReclamaciones() {
-  const eif = await safeGetLatest("/reclamaciones/eif");
-  const lastP = [...new Set((eif||[]).map(r=>r.periodo))].sort().pop();
-  const recent = (eif||[]).filter(r => r.periodo === lastP);
+function renderReclamaciones() {
+  const eif   = filterRows(state.data.reclamaciones);
+  const lastP = [...new Set(eif.map(r => r.periodo))].sort().pop();
+  const recent = eif.filter(r => r.periodo === lastP);
+
   const byProd = {};
-  for (const r of recent) byProd[r.productoServicio||"—"] = (byProd[r.productoServicio||"—"]||0) + (r.cantidad||0);
-  const prodEntries = Object.entries(byProd).sort((a,b)=>b[1]-a[1]).slice(0,15);
+  for (const r of recent) byProd[r.productoServicio || "—"] = (byProd[r.productoServicio || "—"] || 0) + (r.cantidad || 0);
+  const prodEntries = Object.entries(byProd).sort((a, b) => b[1] - a[1]).slice(0, 15);
   if (prodEntries.length) {
+    clearEmpty("chartReclamProducto");
     makeChart("chartReclamProducto", {
-      type:"bar",
-      data:{ labels: prodEntries.map(e=>e[0]), datasets:[{ label:`Reclamos ${lastP||""}`, data: prodEntries.map(e=>e[1]), backgroundColor: PALETTE[0]}]},
-      options:{ ...chartCommon(), indexAxis:"y" }
+      type: "bar",
+      data: { labels: prodEntries.map(e => e[0]), datasets: [{ label: `Reclamos ${lastP || ""}`, data: prodEntries.map(e => e[1]), backgroundColor: PALETTE[0] }] },
+      options: { ...chartCommon(), indexAxis: "y" },
     });
   } else { showEmpty("chartReclamProducto"); }
 
   const byRes = {};
-  for (const r of recent) byRes[r.resultadoReclamacion||"—"] = (byRes[r.resultadoReclamacion||"—"]||0) + (r.cantidad||0);
-  const resEntries = Object.entries(byRes).sort((a,b)=>b[1]-a[1]);
+  for (const r of recent) byRes[r.resultadoReclamacion || "—"] = (byRes[r.resultadoReclamacion || "—"] || 0) + (r.cantidad || 0);
+  const resEntries = Object.entries(byRes).sort((a, b) => b[1] - a[1]);
   if (resEntries.length) {
+    clearEmpty("chartReclamResultado");
     makeChart("chartReclamResultado", {
-      type:"doughnut",
-      data:{ labels: resEntries.map(e=>e[0]), datasets:[{ data: resEntries.map(e=>e[1]), backgroundColor: PALETTE }]},
+      type: "doughnut",
+      data: { labels: resEntries.map(e => e[0]), datasets: [{ data: resEntries.map(e => e[1]), backgroundColor: PALETTE }] },
       options: chartCommon(),
     });
   } else { showEmpty("chartReclamResultado"); }
 }
 
+function renderMercados() {
+  const m = state.data.mercados;
+  const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val ?? "—"; };
+
+  if (!m) {
+    ["mUsdCompra","mUsdVenta","mBtcDop","mBtcUsd","mOroDop","mOroUsd","mPlataDop","mPlataUsd","mPetDop","mPetUsd"].forEach(id => set(id, "No disponible"));
+    set("mercadosUpdated", "No se pudo obtener datos de mercado.");
+    return;
+  }
+
+  // Divisas
+  set("mUsdCompra", m.forex?.usdDopCompra != null ? fmtDOPDec(m.forex.usdDopCompra) : null);
+  set("mUsdVenta",  m.forex?.usdDopVenta  != null ? fmtDOPDec(m.forex.usdDopVenta)  : null);
+  if (m.fuentes?.forex) document.getElementById("mForexSrc").textContent = m.fuentes.forex;
+
+  // BTC
+  set("mBtcDop", m.btc?.dop != null ? fmtDOP(m.btc.dop) : null);
+  set("mBtcUsd", m.btc?.usd != null ? `USD ${new Intl.NumberFormat("en-US").format(Math.round(m.btc.usd))}` : null);
+
+  // Oro
+  set("mOroDop", m.gold?.dopPerOzt != null ? fmtDOP(m.gold.dopPerOzt) : null);
+  set("mOroUsd", m.gold?.usdPerOzt != null ? `USD ${Number(m.gold.usdPerOzt).toLocaleString("en-US", {minimumFractionDigits:2,maximumFractionDigits:2})} / ozt` : null);
+
+  // Plata
+  set("mPlataDop", m.silver?.dopPerOzt != null ? fmtDOPDec(m.silver.dopPerOzt, 0) : null);
+  set("mPlataUsd", m.silver?.usdPerOzt != null ? `USD ${Number(m.silver.usdPerOzt).toFixed(2)} / ozt` : null);
+
+  // Petróleo
+  set("mPetDop", m.oil?.dopPerBarrel != null ? fmtDOP(m.oil.dopPerBarrel) : null);
+  set("mPetUsd", m.oil?.usdPerBarrel != null ? `USD ${Number(m.oil.usdPerBarrel).toFixed(2)} / barril` : null);
+
+  // Combustibles
+  const fuel = m.fuel;
+  if (fuel) {
+    const fuelMap = {
+      mGasPremium:  fuel.gasolinaPremium,
+      mGasRegular:  fuel.gasolinaRegular,
+      mGasoilOp:    fuel.gasoilOptimo,
+      mGasoilReg:   fuel.gasoilRegular,
+      mGlp:         fuel.glp,
+      mKerosene:    fuel.kerosene ?? fuel.avtur,
+    };
+    for (const [id, val] of Object.entries(fuelMap)) {
+      set(id, val != null ? fmtDOPDec(val) : "—");
+    }
+    if (m.fuentes?.fuel) {
+      document.getElementById("combustiblesTitle").textContent =
+        `Combustibles — precio por galón (DOP) · ${m.fuentes.fuel}`;
+    }
+  } else {
+    ["mGasPremium","mGasRegular","mGasoilOp","mGasoilReg","mGlp","mKerosene"].forEach(id => set(id, "No disponible"));
+    document.getElementById("combustiblesTitle").textContent =
+      "Combustibles — precio por galón (DOP) · Sin datos";
+  }
+
+  // Timestamp
+  if (m.timestamp) {
+    const dt = new Date(m.timestamp);
+    set("mercadosUpdated", `Actualizado: ${dt.toLocaleString("es-DO", { dateStyle:"medium", timeStyle:"short" })}`);
+  }
+}
+
 /* ====================================================================== */
-/* Pre-load de TODO al inicio (con progreso)                              */
+/* Render all — sin llamadas al API (para cambios de filtro)              */
 /* ====================================================================== */
-const PIPELINE = [
-  { key: "resumen",      label: "Resumen del sistema",       fn: loadResumen },
-  { key: "cartera",      label: "Cartera de créditos",       fn: loadCartera },
-  { key: "captaciones",  label: "Captaciones",               fn: loadCaptaciones },
-  { key: "comparativa",  label: "Comparativa entre bancos",  fn: loadComparativa },
-  { key: "mapa",         label: "Mapa por provincia",        fn: loadMapa },
-  { key: "estados",      label: "Estados financieros",       fn: loadEstados },
-  { key: "reclamaciones",label: "Reclamaciones",             fn: loadReclamaciones },
+function renderAll() {
+  try { renderResumen();      } catch(e) { console.error("renderResumen", e); }
+  try { renderCartera();      } catch(e) { console.error("renderCartera", e); }
+  try { renderCaptaciones();  } catch(e) { console.error("renderCaptaciones", e); }
+  try { renderComparativa();  } catch(e) { console.error("renderComparativa", e); }
+  try { renderMapa();         } catch(e) { console.error("renderMapa", e); }
+  try { renderEstados();      } catch(e) { console.error("renderEstados", e); }
+  try { renderReclamaciones(); } catch(e) { console.error("renderReclamaciones", e); }
+  // mercados no depende de entidades — no se re-renderiza en cambios de filtro
+}
+
+/* ====================================================================== */
+/* Pipeline de carga completa                                              */
+/* ====================================================================== */
+const FETCH_PIPELINE = [
+  { key: "resumen",       label: "Resumen del sistema",       fn: fetchResumen },
+  { key: "cartera",       label: "Cartera de créditos",       fn: fetchCartera },
+  { key: "captaciones",   label: "Captaciones",               fn: fetchCaptaciones },
+  { key: "comparativa",   label: "Comparativa entre bancos",  fn: fetchComparativa },
+  { key: "mapa",          label: "Mapa por provincia",        fn: fetchMapa },
+  { key: "estados",       label: "Estados financieros",       fn: fetchEstados },
+  { key: "reclamaciones", label: "Reclamaciones",             fn: fetchReclamaciones },
+  { key: "mercados",      label: "Precios de mercado",        fn: fetchMercados },
 ];
 
 async function preloadAll() {
   Preloader.show();
-  Preloader.setSteps(PIPELINE.map(p => ({ key: p.key, label: p.label })));
+  Preloader.setSteps(FETCH_PIPELINE.map(p => ({ key: p.key, label: p.label })));
   setStatus("cargando…");
-  for (let i = 0; i < PIPELINE.length; i++) {
+
+  for (let i = 0; i < FETCH_PIPELINE.length; i++) {
     Preloader.setStatus(i, "active");
     try {
-      // Mapa requiere que el contenedor exista y sea visible para Leaflet calcular tamaño
-      if (PIPELINE[i].key === "mapa") {
-        const sec = document.querySelector('section[data-pane="mapa"]');
-        const wasHidden = sec.hidden;
-        sec.hidden = false;
-        await PIPELINE[i].fn();
-        if (mapInstance) mapInstance.invalidateSize();
-        sec.hidden = wasHidden;
-      } else {
-        await PIPELINE[i].fn();
-      }
+      await FETCH_PIPELINE[i].fn();
       Preloader.setStatus(i, "done");
     } catch (err) {
-      console.error(PIPELINE[i].key, err);
+      console.error(FETCH_PIPELINE[i].key, err);
       Preloader.setStatus(i, "error");
     }
   }
+
+  // Render all from freshly loaded state.data
+  renderAll();
+  renderMercados();   // mercados siempre se renderiza en carga completa
+
   setStatus("ok", "ok");
   Preloader.hide();
 }
 
-function setStatus(msg, kind="") {
+function setStatus(msg, kind = "") {
   const el = document.getElementById("apiStatus");
   el.textContent = msg;
   el.className = "badge " + kind;
@@ -955,109 +1149,91 @@ function setStatus(msg, kind="") {
 /* Tabs                                                                   */
 /* ====================================================================== */
 function showTab(name) {
-  document.querySelectorAll('nav.tabs button').forEach(b => b.classList.toggle("active", b.dataset.tab === name));
-  document.querySelectorAll('section[data-pane]').forEach(s => s.hidden = (s.dataset.pane !== name));
-  if (name === "mapa" && mapInstance) {
-    setTimeout(() => mapInstance.invalidateSize(), 30);
-  }
+  document.querySelectorAll("nav.tabs button").forEach(b => b.classList.toggle("active", b.dataset.tab === name));
+  document.querySelectorAll("section[data-pane]").forEach(s => s.hidden = (s.dataset.pane !== name));
+  if (name === "mapa" && mapInstance) setTimeout(() => mapInstance.invalidateSize(), 30);
 }
 
 /* ====================================================================== */
-/* Selector de entidades (mejorado)                                       */
+/* Selector de entidades                                                  */
 /* ====================================================================== */
 const Entities = {
   init() {
     this.trigger = document.getElementById("entityTrigger");
     this.popover = document.getElementById("entityPopover");
-    this.list = document.getElementById("entityList");
-    this.search = document.getElementById("entitySearch");
+    this.list    = document.getElementById("entityList");
+    this.search  = document.getElementById("entitySearch");
 
     this.trigger.addEventListener("click", () => this.toggle());
     document.addEventListener("click", (e) => {
       if (!this.popover.contains(e.target) && !this.trigger.contains(e.target)) this.close();
     });
     this.search.addEventListener("input", () => this.render());
-    document.getElementById("entitySelectAll").onclick = () => { this.selectAll(); };
+    document.getElementById("entitySelectAll").onclick  = () => { this.selectAll(); };
     document.getElementById("entitySelectNone").onclick = () => { this.selectNone(); };
-    document.getElementById("entityBM").onclick = () => { this.selectBM(); };
-    document.getElementById("entityApply").onclick = () => { this.close(); this.apply(); };
+    document.getElementById("entityBM").onclick         = () => { this.selectBM(); };
+    document.getElementById("entityApply").onclick      = () => { this.close(); this.apply(); };
 
     this.render();
     this.updateLabel();
   },
-  toggle() { this.popover.classList.toggle("open"); if (this.popover.classList.contains("open")) this.search.focus(); },
+  toggle() {
+    this.popover.classList.toggle("open");
+    if (this.popover.classList.contains("open")) this.search.focus();
+  },
   close() { this.popover.classList.remove("open"); },
   render() {
     const q = this.search.value.trim().toLowerCase();
     const html = ENTIDADES_EIF.map(([code, name, list]) => {
       const filtered = list.filter(e => !q || e.toLowerCase().includes(q) || code.toLowerCase().includes(q) || name.toLowerCase().includes(q));
       if (!filtered.length) return "";
-      return `
-        <div class="entity-group">
-          <div class="entity-group-head">
-            <span>${code} — ${name}</span>
-            <button data-action="group-toggle" data-code="${code}">marcar grupo</button>
-          </div>
-          ${filtered.map(e => `
-            <label class="entity-row ${state.selectedEntities.has(e) ? "selected" : ""}">
-              <input type="checkbox" data-name="${e}" ${state.selectedEntities.has(e) ? "checked" : ""} />
-              <span>${e}</span>
-            </label>
-          `).join("")}
+      return `<div class="entity-group">
+        <div class="entity-group-head">
+          <span>${code} — ${name}</span>
+          <button data-action="group-toggle" data-code="${code}">marcar grupo</button>
         </div>
-      `;
+        ${filtered.map(e => `
+          <label class="entity-row ${state.selectedEntities.has(e) ? "selected" : ""}">
+            <input type="checkbox" data-name="${e}" ${state.selectedEntities.has(e) ? "checked" : ""} />
+            <span>${e}</span>
+          </label>`).join("")}
+      </div>`;
     }).join("");
     this.list.innerHTML = html || `<div class="empty"><div class="icon">∅</div>Sin coincidencias</div>`;
-    // wire events
     this.list.querySelectorAll('input[type="checkbox"]').forEach(cb => {
       cb.addEventListener("change", () => {
-        const name = cb.dataset.name;
-        if (cb.checked) state.selectedEntities.add(name);
-        else state.selectedEntities.delete(name);
+        if (cb.checked) state.selectedEntities.add(cb.dataset.name);
+        else state.selectedEntities.delete(cb.dataset.name);
         cb.closest(".entity-row").classList.toggle("selected", cb.checked);
         this.updateCount();
       });
     });
     this.list.querySelectorAll('[data-action="group-toggle"]').forEach(btn => {
       btn.addEventListener("click", () => {
-        const code = btn.dataset.code;
-        const grp = ENTIDADES_EIF.find(g => g[0] === code);
+        const grp = ENTIDADES_EIF.find(g => g[0] === btn.dataset.code);
         if (!grp) return;
         const allSel = grp[2].every(e => state.selectedEntities.has(e));
-        for (const e of grp[2]) {
-          if (allSel) state.selectedEntities.delete(e);
-          else state.selectedEntities.add(e);
-        }
-        this.render();
-        this.updateCount();
+        for (const e of grp[2]) { if (allSel) state.selectedEntities.delete(e); else state.selectedEntities.add(e); }
+        this.render(); this.updateCount();
       });
     });
     this.updateCount();
   },
-  updateCount() {
-    document.getElementById("entitySelCount").textContent = state.selectedEntities.size;
-  },
+  updateCount() { document.getElementById("entitySelCount").textContent = state.selectedEntities.size; },
   updateLabel() {
     const label = document.getElementById("entityLabel");
     const count = document.getElementById("entityCount");
     if (state.selectedEntities.size === 0) {
-      label.textContent = "Bancos Múltiples (default)";
-      count.hidden = true;
+      label.textContent = "Todas las entidades"; count.hidden = true;
     } else if (state.selectedEntities.size === 1) {
-      label.textContent = [...state.selectedEntities][0];
-      count.hidden = true;
+      label.textContent = [...state.selectedEntities][0]; count.hidden = true;
     } else {
-      label.textContent = "Seleccionadas";
-      count.textContent = state.selectedEntities.size;
-      count.hidden = false;
+      label.textContent = "Seleccionadas"; count.textContent = state.selectedEntities.size; count.hidden = false;
     }
   },
-  selectAll() {
-    for (const [, , list] of ENTIDADES_EIF) for (const e of list) state.selectedEntities.add(e);
-    this.render();
-  },
+  selectAll()  { for (const [,, list] of ENTIDADES_EIF) for (const e of list) state.selectedEntities.add(e); this.render(); },
   selectNone() { state.selectedEntities.clear(); this.render(); },
-  selectBM() {
+  selectBM()   {
     state.selectedEntities.clear();
     const bm = ENTIDADES_EIF.find(g => g[0] === "BM");
     if (bm) for (const e of bm[2]) state.selectedEntities.add(e);
@@ -1065,8 +1241,8 @@ const Entities = {
   },
   apply() {
     this.updateLabel();
-    SB.clearCache();
-    preloadAll();
+    // ← Solo re-renderiza desde la data ya cargada. Sin API calls.
+    renderAll();
   },
 };
 
@@ -1076,25 +1252,26 @@ const Entities = {
 document.addEventListener("DOMContentLoaded", () => {
   Preloader.init();
 
-  // Periodos default: enero del año en curso → mes actual
-  const now = new Date();
+  const now  = new Date();
   const yyyy = now.getFullYear();
-  const mm = String(now.getMonth() + 1).padStart(2, "0");
+  const mm   = String(now.getMonth() + 1).padStart(2, "0");
   const validPeriod = (s) => /^\d{4}-(0[1-9]|1[0-2])$/.test(s);
+
   const savedIni = localStorage.getItem("sb_pini_v4");
   const savedFin = localStorage.getItem("sb_pfin_v4");
   state.periodoInicial = validPeriod(savedIni) ? savedIni : `${yyyy}-01`;
   state.periodoFinal   = validPeriod(savedFin) ? savedFin : `${yyyy}-${mm}`;
-  // Limpiar claves de versiones anteriores
   ["sb_pini","sb_pfin","sb_pini_v3","sb_pfin_v3"].forEach(k => localStorage.removeItem(k));
 
   document.getElementById("periodoInicial").value = state.periodoInicial;
   document.getElementById("periodoFinal").value   = state.periodoFinal;
   document.getElementById("periodoInicial").addEventListener("change", e => {
-    state.periodoInicial = e.target.value; localStorage.setItem("sb_pini_v4", state.periodoInicial);
+    state.periodoInicial = e.target.value;
+    localStorage.setItem("sb_pini_v4", state.periodoInicial);
   });
-  document.getElementById("periodoFinal").addEventListener("change",   e => {
-    state.periodoFinal = e.target.value; localStorage.setItem("sb_pfin_v4", state.periodoFinal);
+  document.getElementById("periodoFinal").addEventListener("change", e => {
+    state.periodoFinal = e.target.value;
+    localStorage.setItem("sb_pfin_v4", state.periodoFinal);
   });
 
   Entities.init();
@@ -1104,9 +1281,15 @@ document.addEventListener("DOMContentLoaded", () => {
     if (b) showTab(b.dataset.tab);
   });
 
+  // Recargar = limpiar cache del SB API + volver a traer todo
   document.getElementById("reloadBtn").addEventListener("click", () => {
     SB.clearCache();
     preloadAll();
+  });
+
+  // Cambio de métrica en el mapa — re-renderiza sin API call
+  document.addEventListener("change", e => {
+    if (e.target.id === "mapMetric") renderMapa();
   });
 
   preloadAll();
