@@ -560,6 +560,27 @@ function safeGet(path, params) {
   });
 }
 
+/**
+ * Para "snapshot" de un solo mes: intenta state.periodoFinal y si viene vacío
+ * retrocede hasta 6 meses buscando data. Devuelve los rows encontrados (o []).
+ */
+async function safeGetLatest(path, extraParams = {}) {
+  let testPeriod = state.periodoFinal;
+  for (let i = 0; i < 6; i++) {
+    const params = {
+      periodoInicial: testPeriod, periodoFinal: testPeriod,
+      paginas: 1, registros: 1000,
+      ...extraParams,
+    };
+    if (state.selectedEntities.size > 0) params.entidad = [...state.selectedEntities];
+    else if (!params.tipoEntidad) params.tipoEntidad = "BM";
+    const data = await safeGet(path, params);
+    if (data && data.length) return data;
+    testPeriod = prevMonth(testPeriod);
+  }
+  return [];
+}
+
 /* ====================================================================== */
 /* Charts helpers                                                         */
 /* ====================================================================== */
@@ -675,7 +696,7 @@ async function loadResumen() {
   }
 
   // Morosidad estresada
-  const me = await safeGet("/indicadores/morosidad-estresada", latestParams());
+  const me = await safeGetLatest("/indicadores/morosidad-estresada");
   const lastME = (me || []).slice().sort((a,b)=>(a.periodo||"").localeCompare(b.periodo||"")).pop();
   if (lastME) {
     const fields = ["vencido","cobranza","tc31a60","reestructuradoRea","reestructuradoTemporal","castigos","adjudicado"];
@@ -695,14 +716,13 @@ async function loadResumen() {
 }
 
 async function loadCartera() {
-  const p = latestParams();
   const [tipo, sec, mon, gen, rgo, fac] = await Promise.all([
-    safeGet("/carteras/creditos/tipo", p),
-    safeGet("/carteras/creditos/sectores-economicos", p),
-    safeGet("/carteras/creditos/moneda", p),
-    safeGet("/carteras/creditos/genero", p),
-    safeGet("/carteras/creditos/clasificacion-riesgo", p),
-    safeGet("/carteras/creditos/facilidad", p),
+    safeGetLatest("/carteras/creditos/tipo"),
+    safeGetLatest("/carteras/creditos/sectores-economicos"),
+    safeGetLatest("/carteras/creditos/moneda"),
+    safeGetLatest("/carteras/creditos/genero"),
+    safeGetLatest("/carteras/creditos/clasificacion-riesgo"),
+    safeGetLatest("/carteras/creditos/facilidad"),
   ]);
   aggDonut("chartCarteraTipo", tipo, "tipoCartera", "deuda");
   aggBarTop("chartCarteraSector", sec, "sectorEconomico", "deuda", 12);
@@ -713,10 +733,9 @@ async function loadCartera() {
 }
 
 async function loadCaptaciones() {
-  const p = latestParams();
   const [mon, sec] = await Promise.all([
-    safeGet("/captaciones/moneda", p),
-    safeGet("/captaciones/sector-depositante", p),
+    safeGetLatest("/captaciones/moneda"),
+    safeGetLatest("/captaciones/sector-depositante"),
   ]);
   aggBarTop("chartCaptMoneda", mon, "instrumentoCaptacion", "balance", 14);
   // Combinar dimensiones
@@ -742,10 +761,10 @@ async function loadComparativa() {
     "Cartera de Créditos Vencida (Capital y Rendimientos) / Total de Cartera de Crédito Bruta",
     "Total Patrimonio Neto",
   ];
-  // Probamos el último mes; si está vacío vamos retrocediendo hasta 6 meses
+  // Probamos el último mes; si está vacío vamos retrocediendo hasta 18 meses
   let data = [];
   let testPeriod = state.periodoFinal;
-  for (let i = 0; i < 6 && !data.length; i++) {
+  for (let i = 0; i < 18 && !data.length; i++) {
     data = await safeGet("/indicadores/financieros", {
       periodoInicial: testPeriod, periodoFinal: testPeriod,
       paginas: 1, registros: 1000,
@@ -754,6 +773,10 @@ async function loadComparativa() {
       indicador: indicadores,
     });
     if (!data.length) testPeriod = prevMonth(testPeriod);
+  }
+  if (!data.length) {
+    ["chartRankRoa","chartRankSolv","chartRankMoro","chartRankPat"].forEach(showEmpty);
+    return;
   }
   const grab = (n) => data.filter(r => r.indicador === n).map(r => ({ entidad: r.entidad, valor: r.valor }));
   rankBar("chartRankRoa",  grab(indicadores[0]).sort((a,b)=>b.valor-a.valor).slice(0, 18), "ROA %",       PALETTE[3]);
@@ -788,7 +811,7 @@ async function loadMapa() {
   const metric = document.getElementById("mapMetric").value;
   const path = metric === "cartera" ? "/carteras/creditos/localidad" : "/captaciones/localidad";
   const valField = metric === "cartera" ? "deuda" : "balance";
-  const data = await safeGet(path, latestParams());
+  const data = await safeGetLatest(path);
   const sums = {};
   for (const r of (data||[])) {
     const k = (r.provincia || "").toUpperCase().trim();
@@ -838,7 +861,7 @@ async function loadEstados() {
     showEmpty("chartBalanceTrend");
   }
 
-  const res = await safeGet("/estados/resultados/eif", latestParams());
+  const res = await safeGetLatest("/estados/resultados/eif");
   const lastP = [...new Set((res||[]).map(r=>r.periodo))].sort().pop();
   const filtered = (res||[]).filter(r => r.periodo === lastP);
   const byN2 = {};
@@ -855,7 +878,7 @@ async function loadEstados() {
 }
 
 async function loadReclamaciones() {
-  const eif = await safeGet("/reclamaciones/eif", latestParams());
+  const eif = await safeGetLatest("/reclamaciones/eif");
   const lastP = [...new Set((eif||[]).map(r=>r.periodo))].sort().pop();
   const recent = (eif||[]).filter(r => r.periodo === lastP);
   const byProd = {};
@@ -1053,16 +1076,25 @@ const Entities = {
 document.addEventListener("DOMContentLoaded", () => {
   Preloader.init();
 
-  // Periodos default (último año completo confirmado con datos)
-  state.periodoInicial = localStorage.getItem("sb_pini") || "2024-01";
-  state.periodoFinal   = localStorage.getItem("sb_pfin") || "2024-12";
+  // Periodos default: enero del año en curso → mes actual
+  const now = new Date();
+  const yyyy = now.getFullYear();
+  const mm = String(now.getMonth() + 1).padStart(2, "0");
+  const validPeriod = (s) => /^\d{4}-(0[1-9]|1[0-2])$/.test(s);
+  const savedIni = localStorage.getItem("sb_pini_v4");
+  const savedFin = localStorage.getItem("sb_pfin_v4");
+  state.periodoInicial = validPeriod(savedIni) ? savedIni : `${yyyy}-01`;
+  state.periodoFinal   = validPeriod(savedFin) ? savedFin : `${yyyy}-${mm}`;
+  // Limpiar claves de versiones anteriores
+  ["sb_pini","sb_pfin","sb_pini_v3","sb_pfin_v3"].forEach(k => localStorage.removeItem(k));
+
   document.getElementById("periodoInicial").value = state.periodoInicial;
   document.getElementById("periodoFinal").value   = state.periodoFinal;
   document.getElementById("periodoInicial").addEventListener("change", e => {
-    state.periodoInicial = e.target.value; localStorage.setItem("sb_pini", state.periodoInicial);
+    state.periodoInicial = e.target.value; localStorage.setItem("sb_pini_v4", state.periodoInicial);
   });
   document.getElementById("periodoFinal").addEventListener("change",   e => {
-    state.periodoFinal = e.target.value; localStorage.setItem("sb_pfin", state.periodoFinal);
+    state.periodoFinal = e.target.value; localStorage.setItem("sb_pfin_v4", state.periodoFinal);
   });
 
   Entities.init();
