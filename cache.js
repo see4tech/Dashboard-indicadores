@@ -7,7 +7,8 @@
     _fetch: (typeof fetch !== "undefined") ? fetch.bind(globalThis) : null,
     _indexedDB: (typeof indexedDB !== "undefined") ? indexedDB : null,
 
-    init: async function () { throw new Error("not implemented"); },
+    init: null,  // assigned below
+    _mode: null,
     get: async function () { throw new Error("not implemented"); },
     preload: async function () { throw new Error("not implemented"); },
     invalidateAll: async function () { throw new Error("not implemented"); },
@@ -23,6 +24,40 @@
     const refM = d.getUTCMonth() + 1;
     return (refY - y) * 12 + (refM - m);
   }
+
+  const DB_NAME = "sb-dashboard-cache";
+  const DB_VERSION = 1;
+  const STORE = "responses";
+
+  let _db = null;
+  const _l1 = new Map();
+  const _inflight = new Map();
+
+  SBCache.init = async function () {
+    if (SBCache._mode) return;
+    if (!SBCache._indexedDB) {
+      SBCache._mode = "passthrough";
+      return;
+    }
+    await new Promise((resolve, reject) => {
+      const req = SBCache._indexedDB.open(DB_NAME, DB_VERSION);
+      req.onupgradeneeded = (e) => {
+        const db = e.target.result;
+        if (db.objectStoreNames.contains(STORE)) db.deleteObjectStore(STORE);
+        db.createObjectStore(STORE, { keyPath: "url" });
+      };
+      req.onsuccess = () => { _db = req.result; resolve(); };
+      req.onerror = () => reject(req.error);
+    });
+    SBCache._mode = "idb";
+  };
+
+  SBCache._closeForTests = function () {
+    if (_db) { try { _db.close(); } catch (e) {} _db = null; }
+    _l1.clear();
+    _inflight.clear();
+    SBCache._mode = null;
+  };
 
   const _listeners = new Map();
 

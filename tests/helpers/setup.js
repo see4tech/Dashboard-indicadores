@@ -38,6 +38,13 @@ function emptyResponse(status = 204) {
 }
 
 async function resetIDB() {
+  // Close any existing SBCache connection before deleting
+  try {
+    const SBCache = require("../../cache.js");
+    if (SBCache && typeof SBCache._closeForTests === "function") {
+      SBCache._closeForTests();
+    }
+  } catch (e) {}
   await new Promise((resolve) => {
     const req = indexedDB.deleteDatabase("sb-dashboard-cache");
     req.onsuccess = () => resolve();
