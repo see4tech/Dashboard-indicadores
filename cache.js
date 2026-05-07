@@ -14,7 +14,7 @@
     invalidateAll: null,  // assigned below
     on: null,  // assigned below
     policyFor: null,  // assigned below
-    buildPreloadJobs: function () { throw new Error("not implemented"); },
+    buildPreloadJobs: null,  // assigned below
   };
 
   function monthDelta(periodoFinal, now) {
@@ -239,6 +239,98 @@
       r.onsuccess = () => resolve();
       r.onerror = () => reject(r.error);
     });
+  };
+
+  const PROBING_PATHS = [
+    "/indicadores/morosidad-estresada",
+    "/carteras/creditos/tipo",
+    "/carteras/creditos/sectores-economicos",
+    "/carteras/creditos/moneda",
+    "/carteras/creditos/genero",
+    "/carteras/creditos/clasificacion-riesgo",
+    "/carteras/creditos/facilidad",
+    "/carteras/creditos/localidad",
+    "/captaciones/moneda",
+    "/captaciones/sector-depositante",
+    "/captaciones/localidad",
+    "/estados/situacion/eif",
+    "/estados/resultados/eif",
+    "/reclamaciones/eif",
+  ];
+
+  const COMPARATIVA_INDICATORS = [
+    "ROA (Rentabilidad de los Activos)",
+    "Indice de Solvencia",
+    "Cartera de Créditos Vencida (Capital y Rendimientos) / Total de Cartera de Crédito Bruta",
+    "Total Patrimonio Neto",
+  ];
+
+  const PRELOAD_SCOPES = [
+    {},
+    { tipoEntidad: ["BM"]   },
+    { tipoEntidad: ["BAyC"] },
+    { tipoEntidad: ["AC"]   },
+    { tipoEntidad: ["ARC"]  },
+  ];
+
+  function _prevMonth(ym) {
+    const [y, m] = ym.split("-").map(Number);
+    const d = new Date(Date.UTC(y, m - 2, 1));
+    return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
+  }
+
+  function _buildUrl(path, params) {
+    const qs = new URLSearchParams();
+    for (const [k, v] of Object.entries(params)) {
+      if (v == null || v === "") continue;
+      if (Array.isArray(v)) v.forEach(x => qs.append(k, x));
+      else qs.append(k, v);
+    }
+    const q = qs.toString();
+    return `/api${path}${q ? "?" + q : ""}`;
+  }
+
+  SBCache.buildPreloadJobs = function (state) {
+    const pf = state.periodoFinal;
+    const yyyy = pf.split("-")[0];
+    const periodoInicial = `${yyyy}-01`;
+    const months = [pf, _prevMonth(pf), _prevMonth(_prevMonth(pf))];
+    const jobs = [];
+
+    for (const scope of PRELOAD_SCOPES) {
+      jobs.push({ url: _buildUrl("/indicadores/principales", {
+        periodoInicial, periodoFinal: pf,
+        paginas: 1, registros: 200,
+        ...scope,
+      })});
+    }
+
+    for (const path of PROBING_PATHS) {
+      for (const scope of PRELOAD_SCOPES) {
+        for (const m of months) {
+          jobs.push({ url: _buildUrl(path, {
+            periodoInicial: m, periodoFinal: m,
+            paginas: 1, registros: 5000,
+            ...scope,
+          })});
+        }
+      }
+    }
+
+    for (const scope of PRELOAD_SCOPES) {
+      for (const m of months) {
+        jobs.push({ url: _buildUrl("/indicadores/financieros", {
+          periodoInicial: m, periodoFinal: m,
+          paginas: 1, registros: 5000,
+          indicador: COMPARATIVA_INDICATORS,
+          ...scope,
+        })});
+      }
+    }
+
+    jobs.push({ url: "/api/mercados" });
+
+    return jobs;
   };
 
   const PRELOAD_CONCURRENCY = 6;
