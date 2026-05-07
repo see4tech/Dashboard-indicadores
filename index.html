@@ -16,17 +16,19 @@
     --text: #1a2540;
     --muted: #6c7b95;
     --primary: #2c6df0;
+    --primary-soft: #e3edff;
     --green: #16a36a;
     --red: #d73a4f;
     --amber: #d68a16;
     --violet: #7b4dd6;
     --teal: #0aa3ad;
-    --grid: #e8eef7;
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text);
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", sans-serif; }
   a { color: var(--primary); }
+  button, input, select { font-family: inherit; }
+
   header.top {
     position: sticky; top: 0; z-index: 50;
     background: rgba(255,255,255,.92); backdrop-filter: blur(8px);
@@ -36,34 +38,100 @@
     box-shadow: 0 1px 0 rgba(15,28,55,.04);
   }
   header.top h1 { font-size: 18px; margin: 0 16px 0 0; font-weight: 600; }
-  .badge { font-size: 11px; padding: 2px 8px; border-radius: 99px;
+  .badge { font-size: 11px; padding: 3px 10px; border-radius: 99px;
     background: var(--panel-2); color: var(--muted); }
+  .badge.error { background: #fee9ed; color: #8d1d2c; }
+  .badge.ok { background: #e3f5ec; color: var(--green); }
+
   .ctrl { display: flex; align-items: center; gap: 8px; }
   .ctrl label { font-size: 12px; color: var(--muted); }
   input, select, button {
-    background: var(--panel-2); color: var(--text);
+    background: var(--panel); color: var(--text);
     border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px;
-    font-size: 13px; font-family: inherit;
+    font-size: 13px;
   }
   input:focus, select:focus { outline: 2px solid var(--primary); outline-offset: -1px; }
   button { cursor: pointer; }
   button.primary { background: var(--primary); border-color: var(--primary); color: white; font-weight: 600; }
-  button.primary:hover { filter: brightness(1.1); }
+  button.primary:hover { filter: brightness(1.05); }
   button.ghost { background: transparent; }
   button.ghost:hover { background: var(--panel-2); }
+
+  /* Selector de entidades */
+  .entity-trigger {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 8px;
+    padding: 6px 10px; cursor: pointer; min-width: 220px;
+    display: flex; align-items: center; gap: 8px; font-size: 13px;
+  }
+  .entity-trigger:hover { border-color: var(--primary); }
+  .entity-trigger .count {
+    background: var(--primary-soft); color: var(--primary);
+    border-radius: 99px; padding: 1px 8px; font-size: 11px; font-weight: 600;
+  }
+  .entity-trigger .caret { color: var(--muted); margin-left: auto; }
+  .entity-popover {
+    position: absolute; top: calc(100% + 6px); right: 0;
+    width: 380px; max-height: 460px; display: none;
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 12px; box-shadow: 0 12px 32px rgba(15,28,55,.12);
+    z-index: 60; overflow: hidden;
+  }
+  .entity-popover.open { display: flex; flex-direction: column; }
+  .entity-pop-head { padding: 12px; border-bottom: 1px solid var(--border); }
+  .entity-pop-search { width: 100%; }
+  .entity-pop-actions {
+    display: flex; gap: 6px; margin-top: 8px;
+  }
+  .entity-pop-actions button {
+    flex: 1; padding: 6px; font-size: 12px;
+  }
+  .entity-pop-list {
+    overflow-y: auto; padding: 8px 4px 8px 8px;
+    flex: 1;
+  }
+  .entity-group {
+    margin-bottom: 4px;
+  }
+  .entity-group-head {
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: 11px; font-weight: 600; color: var(--muted);
+    text-transform: uppercase; letter-spacing: .04em;
+    padding: 8px 6px 4px;
+  }
+  .entity-group-head button {
+    background: transparent; border: none; color: var(--primary);
+    font-size: 11px; cursor: pointer; padding: 2px 6px;
+  }
+  .entity-row {
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 8px; border-radius: 6px; cursor: pointer;
+    font-size: 13px;
+  }
+  .entity-row:hover { background: var(--panel-2); }
+  .entity-row.selected { background: var(--primary-soft); }
+  .entity-row input[type="checkbox"] { margin: 0; cursor: pointer; }
+  .entity-pop-foot {
+    border-top: 1px solid var(--border); padding: 10px 12px;
+    display: flex; gap: 8px; justify-content: space-between; align-items: center;
+    font-size: 12px; color: var(--muted);
+  }
+  .entity-wrap { position: relative; }
+
+  /* Tabs */
   nav.tabs { display: flex; gap: 4px; padding: 0 24px; border-bottom: 1px solid var(--border);
     background: var(--bg); position: sticky; top: 65px; z-index: 49; overflow-x: auto; }
   nav.tabs button { background: transparent; border: none; border-radius: 0;
     padding: 12px 16px; color: var(--muted); border-bottom: 2px solid transparent;
-    white-space: nowrap; }
+    white-space: nowrap; font-size: 13px; font-weight: 500;
+  }
   nav.tabs button.active { color: var(--text); border-bottom-color: var(--primary); }
   nav.tabs button:hover:not(.active) { color: var(--text); }
+
   main { padding: 24px; max-width: 1600px; margin: 0 auto; }
   .grid { display: grid; gap: 16px; }
   .grid.kpis { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
   .grid.cards-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .grid.cards-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  @media (max-width: 1100px) { .grid.cards-2, .grid.cards-3 { grid-template-columns: 1fr; } }
+  @media (max-width: 1100px) { .grid.cards-2 { grid-template-columns: 1fr; } }
   .card {
     background: var(--panel); border: 1px solid var(--border);
     border-radius: 14px; padding: 18px;
@@ -73,12 +141,10 @@
     text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
   .card .kpi-value { font-size: 28px; font-weight: 700; margin: 6px 0 2px; }
   .card .kpi-sub { font-size: 12px; color: var(--muted); }
-  .card .kpi-value.green { color: var(--green); }
-  .card .kpi-value.red { color: var(--red); }
-  .chart-card { padding: 16px; }
   .chart-card h2 { font-size: 14px; margin: 0 0 12px; font-weight: 600; }
   .chart-wrap { position: relative; height: 320px; }
   .chart-wrap.tall { height: 460px; }
+
   table.data { width: 100%; border-collapse: collapse; font-size: 13px; }
   table.data th, table.data td { padding: 8px 10px; text-align: left;
     border-bottom: 1px solid var(--border); }
@@ -86,39 +152,64 @@
     text-transform: uppercase; letter-spacing: .04em; }
   table.data tbody tr:hover { background: var(--panel-2); }
   .num { text-align: right; font-variant-numeric: tabular-nums; }
-  .pill { display: inline-block; padding: 2px 8px; border-radius: 99px; font-size: 11px;
-    background: var(--panel-2); color: var(--muted); margin-right: 4px; margin-bottom: 4px; }
-  .pill.active { background: var(--primary); color: white; }
-  .multi { display: flex; flex-wrap: wrap; gap: 4px; max-height: 90px; overflow-y: auto;
-    padding: 6px; border: 1px solid var(--border); border-radius: 8px;
-    background: var(--panel-2); min-width: 280px; max-width: 480px; }
-  .loading { padding: 40px; text-align: center; color: var(--muted); }
-  .error { padding: 16px; border-radius: 10px; background: #fee9ed; color: #8d1d2c;
-    border: 1px solid #f6c4cd; font-size: 13px; }
+
   #map { height: 480px; border-radius: 10px; background: var(--panel-2); }
-  .legend { display: flex; align-items: center; gap: 6px; font-size: 11px;
-    color: var(--muted); flex-wrap: wrap; }
-  .legend-grad { display: inline-block; width: 90px; height: 10px;
-    background: linear-gradient(to right, #1a2540, var(--primary), var(--violet));
-    border-radius: 4px; }
-  details.entities-pop { position: relative; }
-  details.entities-pop > summary { list-style: none; cursor: pointer;
-    background: var(--panel-2); padding: 8px 12px; border-radius: 8px;
-    border: 1px solid var(--border); font-size: 13px; }
-  details.entities-pop > summary::-webkit-details-marker { display: none; }
-  details.entities-pop[open] .multi { position: absolute; top: 100%; left: 0; margin-top: 4px;
-    z-index: 100; max-height: 300px; min-width: 320px; box-shadow: 0 12px 32px rgba(0,0,0,.5); }
+  .legend { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--muted); flex-wrap: wrap; }
   .small { font-size: 11px; color: var(--muted); }
-  .toolbar-row { display:flex; gap:12px; flex-wrap: wrap; align-items: center; }
+  .toolbar-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
   .footer { padding: 32px 24px; color: var(--muted); font-size: 12px; text-align: center; }
   hr.sep { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+
+  /* Empty state */
+  .empty {
+    padding: 40px 20px; text-align: center; color: var(--muted); font-size: 13px;
+  }
+  .empty .icon { font-size: 24px; opacity: .5; margin-bottom: 6px; }
+
+  /* PRELOADER overlay */
+  .preloader {
+    position: fixed; inset: 0; z-index: 200;
+    background: rgba(246,248,252,.96); backdrop-filter: blur(3px);
+    display: flex; align-items: center; justify-content: center;
+    transition: opacity .3s ease;
+  }
+  .preloader.hidden { opacity: 0; pointer-events: none; }
+  .preloader-card {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 16px; padding: 28px 32px; width: 420px; max-width: 92vw;
+    box-shadow: 0 12px 36px rgba(15,28,55,.08);
+  }
+  .preloader-title { font-size: 16px; font-weight: 600; margin: 0 0 4px; text-align: center; }
+  .preloader-sub { font-size: 13px; color: var(--muted); margin-bottom: 18px; text-align: center; }
+  .progress-bar {
+    height: 6px; background: var(--panel-2); border-radius: 99px; overflow: hidden;
+    margin-bottom: 14px;
+  }
+  .progress-bar > span {
+    display:block; height:100%; background: linear-gradient(90deg, var(--primary), var(--violet));
+    border-radius: 99px; transition: width .3s ease; width: 0%;
+  }
+  .progress-row { display:flex; justify-content: space-between; font-size: 12px; color: var(--muted); }
+  .step-list {
+    margin: 14px 0 0; padding: 0; list-style: none;
+    font-size: 12px; max-height: 200px; overflow-y: auto;
+  }
+  .step-list li { display: flex; align-items: center; padding: 4px 0; color: var(--muted); }
+  .step-list li.done { color: var(--green); }
+  .step-list li.error { color: var(--red); }
+  .step-list li.active { color: var(--text); font-weight: 500; }
+  .step-list .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--border); margin-right: 10px; flex-shrink: 0; }
+  .step-list li.done .dot { background: var(--green); }
+  .step-list li.error .dot { background: var(--red); }
+  .step-list li.active .dot { background: var(--primary); animation: pulse 1.2s ease infinite; }
+  @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.4); box-shadow: 0 0 0 4px rgba(44,109,240,.15)} }
 </style>
 </head>
 <body>
 
 <header class="top">
   <h1>Indicadores Financieros — SB-RD</h1>
-  <span class="badge" id="apiStatus">cargando…</span>
+  <span class="badge" id="apiStatus">listo</span>
 
   <div class="ctrl">
     <label>Periodo</label>
@@ -127,13 +218,31 @@
     <input id="periodoFinal" type="month" />
   </div>
 
-  <details class="entities-pop">
-    <summary id="entitiesSummary">Entidades: TODOS</summary>
-    <div class="multi" id="entitiesMulti"></div>
-  </details>
+  <div class="ctrl entity-wrap">
+    <label>Entidades</label>
+    <button class="entity-trigger" id="entityTrigger" type="button">
+      <span id="entityLabel">Todas</span>
+      <span class="count" id="entityCount" hidden>0</span>
+      <span class="caret">▾</span>
+    </button>
+    <div class="entity-popover" id="entityPopover">
+      <div class="entity-pop-head">
+        <input type="search" class="entity-pop-search" id="entitySearch" placeholder="Buscar banco…" />
+        <div class="entity-pop-actions">
+          <button class="ghost" id="entitySelectAll">Todas</button>
+          <button class="ghost" id="entitySelectNone">Ninguna</button>
+          <button class="ghost" id="entityBM">Solo BM</button>
+        </div>
+      </div>
+      <div class="entity-pop-list" id="entityList"></div>
+      <div class="entity-pop-foot">
+        <span><span id="entitySelCount">0</span> seleccionadas</span>
+        <button class="primary" id="entityApply">Aplicar</button>
+      </div>
+    </div>
+  </div>
 
   <button class="primary" id="reloadBtn">Recargar</button>
-  <button class="ghost" id="clearCacheBtn" title="Limpia cache de respuestas">Limpiar cache</button>
 </header>
 
 <nav class="tabs" id="tabs">
@@ -148,7 +257,7 @@
 
 <main>
 
-<!-- ====================== TAB: RESUMEN ====================== -->
+<!-- ====================== RESUMEN ====================== -->
 <section data-pane="resumen">
   <div class="grid kpis" id="kpisRow">
     <div class="card"><h3>Activos del sistema</h3><div class="kpi-value" id="kpiActivos">—</div><div class="kpi-sub">DOP</div></div>
@@ -160,97 +269,46 @@
     <div class="card"><h3>Tasa pasiva</h3><div class="kpi-value" id="kpiTasaPasiva">—</div><div class="kpi-sub">Promedio %</div></div>
     <div class="card"><h3>Margen</h3><div class="kpi-value" id="kpiMargen">—</div><div class="kpi-sub">% (activa - pasiva)</div></div>
   </div>
-
   <hr class="sep" />
-
   <div class="grid cards-2">
-    <div class="card chart-card">
-      <h2>Evolución mensual — Activos y Cartera</h2>
-      <div class="chart-wrap"><canvas id="chartTrendActivos"></canvas></div>
-    </div>
-    <div class="card chart-card">
-      <h2>Evolución mensual — Solvencia, ROA y Morosidad</h2>
-      <div class="chart-wrap"><canvas id="chartTrendRatios"></canvas></div>
-    </div>
-    <div class="card chart-card">
-      <h2>Tasas activa, pasiva y margen</h2>
-      <div class="chart-wrap"><canvas id="chartTasas"></canvas></div>
-    </div>
-    <div class="card chart-card">
-      <h2>Morosidad estresada — última lectura</h2>
-      <div class="chart-wrap"><canvas id="chartMorosidadEstresada"></canvas></div>
-    </div>
+    <div class="card chart-card"><h2>Evolución — Activos y Cartera</h2><div class="chart-wrap"><canvas id="chartTrendActivos"></canvas></div></div>
+    <div class="card chart-card"><h2>Evolución — Solvencia, ROA y Morosidad</h2><div class="chart-wrap"><canvas id="chartTrendRatios"></canvas></div></div>
+    <div class="card chart-card"><h2>Tasas activa, pasiva y margen</h2><div class="chart-wrap"><canvas id="chartTasas"></canvas></div></div>
+    <div class="card chart-card"><h2>Morosidad estresada — última lectura</h2><div class="chart-wrap"><canvas id="chartMorosidadEstresada"></canvas></div></div>
   </div>
 </section>
 
-<!-- ====================== TAB: CARTERA ====================== -->
+<!-- ====================== CARTERA ====================== -->
 <section data-pane="cartera" hidden>
   <div class="grid cards-2">
-    <div class="card chart-card">
-      <h2>Cartera por tipo de crédito</h2>
-      <div class="chart-wrap"><canvas id="chartCarteraTipo"></canvas></div>
-    </div>
-    <div class="card chart-card">
-      <h2>Cartera por sector económico (top 12)</h2>
-      <div class="chart-wrap tall"><canvas id="chartCarteraSector"></canvas></div>
-    </div>
-    <div class="card chart-card">
-      <h2>Cartera por moneda</h2>
-      <div class="chart-wrap"><canvas id="chartCarteraMoneda"></canvas></div>
-    </div>
-    <div class="card chart-card">
-      <h2>Cartera por género</h2>
-      <div class="chart-wrap"><canvas id="chartCarteraGenero"></canvas></div>
-    </div>
-    <div class="card chart-card">
-      <h2>Cartera por clasificación de riesgo</h2>
-      <div class="chart-wrap"><canvas id="chartCarteraRiesgo"></canvas></div>
-    </div>
-    <div class="card chart-card">
-      <h2>Cartera por tipo de facilidad</h2>
-      <div class="chart-wrap"><canvas id="chartCarteraFacilidad"></canvas></div>
-    </div>
+    <div class="card chart-card"><h2>Cartera por tipo de crédito</h2><div class="chart-wrap"><canvas id="chartCarteraTipo"></canvas></div></div>
+    <div class="card chart-card"><h2>Cartera por sector económico (top 12)</h2><div class="chart-wrap tall"><canvas id="chartCarteraSector"></canvas></div></div>
+    <div class="card chart-card"><h2>Cartera por moneda</h2><div class="chart-wrap"><canvas id="chartCarteraMoneda"></canvas></div></div>
+    <div class="card chart-card"><h2>Cartera por género</h2><div class="chart-wrap"><canvas id="chartCarteraGenero"></canvas></div></div>
+    <div class="card chart-card"><h2>Cartera por clasificación de riesgo</h2><div class="chart-wrap"><canvas id="chartCarteraRiesgo"></canvas></div></div>
+    <div class="card chart-card"><h2>Cartera por tipo de facilidad</h2><div class="chart-wrap"><canvas id="chartCarteraFacilidad"></canvas></div></div>
   </div>
 </section>
 
-<!-- ====================== TAB: CAPTACIONES ====================== -->
+<!-- ====================== CAPTACIONES ====================== -->
 <section data-pane="captaciones" hidden>
   <div class="grid cards-2">
-    <div class="card chart-card">
-      <h2>Captaciones por moneda (instrumento)</h2>
-      <div class="chart-wrap tall"><canvas id="chartCaptMoneda"></canvas></div>
-    </div>
-    <div class="card chart-card">
-      <h2>Captaciones por sector y tipo de depositante</h2>
-      <div class="chart-wrap tall"><canvas id="chartCaptSector"></canvas></div>
-    </div>
+    <div class="card chart-card"><h2>Captaciones por instrumento</h2><div class="chart-wrap tall"><canvas id="chartCaptMoneda"></canvas></div></div>
+    <div class="card chart-card"><h2>Captaciones por sector y tipo de depositante</h2><div class="chart-wrap tall"><canvas id="chartCaptSector"></canvas></div></div>
   </div>
-  <div class="small" style="margin-top:8px">Nota: estos endpoints requieren al menos una entidad — usa el filtro de arriba.</div>
 </section>
 
-<!-- ====================== TAB: COMPARATIVA ====================== -->
+<!-- ====================== COMPARATIVA ====================== -->
 <section data-pane="comparativa" hidden>
   <div class="grid cards-2">
-    <div class="card chart-card">
-      <h2>ROA — ranking de entidades</h2>
-      <div class="chart-wrap tall"><canvas id="chartRankRoa"></canvas></div>
-    </div>
-    <div class="card chart-card">
-      <h2>Solvencia — ranking de entidades</h2>
-      <div class="chart-wrap tall"><canvas id="chartRankSolv"></canvas></div>
-    </div>
-    <div class="card chart-card">
-      <h2>Morosidad — ranking de entidades (menor es mejor)</h2>
-      <div class="chart-wrap tall"><canvas id="chartRankMoro"></canvas></div>
-    </div>
-    <div class="card chart-card">
-      <h2>Total Patrimonio Neto por entidad</h2>
-      <div class="chart-wrap tall"><canvas id="chartRankPat"></canvas></div>
-    </div>
+    <div class="card chart-card"><h2>ROA — ranking de entidades</h2><div class="chart-wrap tall"><canvas id="chartRankRoa"></canvas></div></div>
+    <div class="card chart-card"><h2>Solvencia — ranking de entidades</h2><div class="chart-wrap tall"><canvas id="chartRankSolv"></canvas></div></div>
+    <div class="card chart-card"><h2>Morosidad — ranking (menor es mejor)</h2><div class="chart-wrap tall"><canvas id="chartRankMoro"></canvas></div></div>
+    <div class="card chart-card"><h2>Patrimonio Neto por entidad</h2><div class="chart-wrap tall"><canvas id="chartRankPat"></canvas></div></div>
   </div>
 </section>
 
-<!-- ====================== TAB: MAPA ====================== -->
+<!-- ====================== MAPA ====================== -->
 <section data-pane="mapa" hidden>
   <div class="card">
     <div class="toolbar-row" style="margin-bottom: 10px">
@@ -259,23 +317,17 @@
         <option value="cartera">Cartera de crédito (deuda)</option>
         <option value="captaciones">Captaciones (balance)</option>
       </select>
-      <span class="legend">
-        <span>Bajo</span>
-        <span class="legend-grad"></span>
-        <span>Alto</span>
-      </span>
+      <span class="legend">El tamaño y color del círculo representan la magnitud por provincia.</span>
     </div>
     <div id="map"></div>
-    <div class="small" style="margin-top:8px">
-      Datos por provincia, sumados sobre las entidades seleccionadas. Click en una provincia para detalle.
-    </div>
+    <div class="small" style="margin-top:8px">Datos por provincia, sumados sobre las entidades seleccionadas.</div>
   </div>
 </section>
 
-<!-- ====================== TAB: ESTADOS FINANCIEROS ====================== -->
+<!-- ====================== ESTADOS ====================== -->
 <section data-pane="estados" hidden>
   <div class="card chart-card">
-    <h2>Estado de situación EIF — Activos, Pasivos, Patrimonio (suma del filtro)</h2>
+    <h2>Estado de situación EIF — Activos / Pasivos / Patrimonio</h2>
     <div class="chart-wrap tall"><canvas id="chartBalanceTrend"></canvas></div>
   </div>
   <hr class="sep" />
@@ -285,37 +337,91 @@
   </div>
 </section>
 
-<!-- ====================== TAB: RECLAMACIONES ====================== -->
+<!-- ====================== RECLAMACIONES ====================== -->
 <section data-pane="reclamaciones" hidden>
   <div class="grid cards-2">
-    <div class="card chart-card">
-      <h2>Reclamaciones EIF — por producto/servicio</h2>
-      <div class="chart-wrap tall"><canvas id="chartReclamProducto"></canvas></div>
-    </div>
-    <div class="card chart-card">
-      <h2>Reclamaciones EIF — resultado</h2>
-      <div class="chart-wrap"><canvas id="chartReclamResultado"></canvas></div>
-    </div>
+    <div class="card chart-card"><h2>Reclamaciones por producto/servicio</h2><div class="chart-wrap tall"><canvas id="chartReclamProducto"></canvas></div></div>
+    <div class="card chart-card"><h2>Reclamaciones por resultado</h2><div class="chart-wrap"><canvas id="chartReclamResultado"></canvas></div></div>
   </div>
 </section>
 
 <div class="footer">
   Datos: <a href="https://desarrollador.sb.gob.do/" target="_blank" rel="noopener">API Estadísticas — Superintendencia de Bancos RD</a>.
-  La API key vive en variables de entorno del servidor — el navegador nunca la ve.
+  La API key vive en variables de entorno del servidor.
 </div>
 
 </main>
 
+<!-- PRELOADER -->
+<div class="preloader" id="preloader">
+  <div class="preloader-card">
+    <h3 class="preloader-title">Cargando indicadores</h3>
+    <p class="preloader-sub" id="preloaderSub">Consultando datos del Sistema Financiero…</p>
+    <div class="progress-bar"><span id="progressFill"></span></div>
+    <div class="progress-row">
+      <span id="progressText">0 / 0</span>
+      <span id="progressPct">0%</span>
+    </div>
+    <ul class="step-list" id="stepList"></ul>
+  </div>
+</div>
+
 <script>
 /* ====================================================================== */
-/* Cliente del API SB-RD                                                  */
+/* 32 provincias de RD con centroides (lat, lng)                          */
+/* ====================================================================== */
+const PROVINCIAS = {
+  "DISTRITO NACIONAL":    [18.4861, -69.9312],
+  "AZUA":                 [18.4539, -70.7350],
+  "BAHORUCO":             [18.4881, -71.4128],
+  "BARAHONA":             [18.2086, -71.1027],
+  "DAJABÓN":              [19.5503, -71.7081],
+  "DUARTE":               [19.2986, -70.0356],
+  "ELÍAS PIÑA":           [18.8770, -71.7080],
+  "EL SEIBO":             [18.7642, -69.0394],
+  "ESPAILLAT":            [19.4333, -70.4000],
+  "HATO MAYOR":           [18.7642, -69.2581],
+  "HERMANAS MIRABAL":     [19.3736, -70.5006],
+  "INDEPENDENCIA":        [18.5500, -71.7500],
+  "LA ALTAGRACIA":        [18.5500, -68.6700],
+  "LA ROMANA":            [18.4275, -68.9728],
+  "LA VEGA":              [19.2222, -70.5286],
+  "MARÍA TRINIDAD SÁNCHEZ":[19.4000, -69.8500],
+  "MONSEÑOR NOUEL":       [18.9300, -70.4000],
+  "MONTE CRISTI":         [19.8500, -71.6500],
+  "MONTE PLATA":          [18.8000, -69.7833],
+  "PEDERNALES":           [17.8000, -71.5500],
+  "PERAVIA":              [18.4200, -70.3300],
+  "PUERTO PLATA":         [19.7892, -70.6928],
+  "SAMANÁ":               [19.2056, -69.3367],
+  "SAN CRISTÓBAL":        [18.4181, -70.1075],
+  "SAN JOSÉ DE OCOA":     [18.5500, -70.5000],
+  "SAN JUAN":             [18.8056, -71.2306],
+  "SAN PEDRO DE MACORÍS": [18.4622, -69.3000],
+  "SANCHEZ RAMÍREZ":      [19.0500, -70.1500],
+  "SANTIAGO":             [19.4517, -70.6986],
+  "SANTIAGO RODRÍGUEZ":   [19.4625, -71.3389],
+  "SANTO DOMINGO":        [18.5000, -69.8500],
+  "VALVERDE":             [19.5825, -70.7861],
+};
+
+/* ====================================================================== */
+/* Catálogo de entidades EIF (nombres cortos por tipo)                    */
+/* ====================================================================== */
+const ENTIDADES_EIF = [
+  ["BM", "Bancos Múltiples", ["BHD LEON","POPULAR","BANRESERVAS","SCOTIABANK","ACTIVO","ADEMI","BANCAMERICA","BANESCO","BDI","BELLBANK","CARIBE","CITIBANK","LAFISE","LOPEZ DE HARO","PROMERICA","SANTA CRUZ","VIMENCA"]],
+  ["BAyC","Bancos de Ahorro y Crédito",["ADOPEM","ATLANTICO","BANCO BACC","BANCOTUI","BANFONDESA","BONANZA","COFACI","CONFISA","EMPIRE","FIHOGAR","GRUFICORP","JMMB","MOTOR CREDITO","UNION"]],
+  ["AAyP","Asociaciones de Ahorros y Préstamos",["ABONAP","ALAVER","APAP","CIBAO","DUARTE","LA NACIONAL","MAGUANA","MOCANA","PERAVIA","ROMANA"]],
+  ["CC",  "Corporaciones de Crédito",["LEASING CONFISA","MONUMENTAL","NORPRESA","OFICORP","OPTIMA","REIDCO"]],
+  ["EP",  "Entidades Públicas",["BANCO AGRICOLA","BANDEX"]],
+];
+
+/* ====================================================================== */
+/* Cliente del API (vía /api proxy de Netlify Function)                   */
 /* ====================================================================== */
 const SB = {
-  // Llama al endpoint /api/* que Netlify reescribe a la función serverless.
-  // La función inyecta la API key desde la variable de entorno SB_API_KEY.
   base: "/api",
   cache: new Map(),
-
   async get(path, params={}) {
     const qs = new URLSearchParams();
     for (const [k, v] of Object.entries(params)) {
@@ -332,50 +438,40 @@ const SB = {
       const msg = (body && body.Message) || `HTTP ${r.status}`;
       throw new Error(msg);
     }
-    // El API a veces envuelve en {Succeeded, Data} y a veces devuelve el array directo
     const data = (body && Array.isArray(body)) ? body
-               : (body && body.Data) ? body.Data : body;
+               : (body && body.Data) ? body.Data
+               : (body && body.Succeeded === false ? [] : body);
     this.cache.set(url, data);
     return data;
   },
   clearCache() { this.cache.clear(); },
 };
 
-/* Catálogo de entidades EIF (nombres cortos) */
-const ENTIDADES_EIF = [
-  ["BM",   ["BHD LEON","POPULAR","BANRESERVAS","SCOTIABANK","ACTIVO","ADEMI","BANCAMERICA","BANESCO","BDI","BELLBANK","CARIBE","CITIBANK","LAFISE","LOPEZ DE HARO","PROMERICA","SANTA CRUZ","VIMENCA"]],
-  ["BAyC", ["ADOPEM","ATLANTICO","BANCO BACC","BANCOTUI","BANFONDESA","BONANZA","COFACI","CONFISA","EMPIRE","FIHOGAR","GRUFICORP","JMMB","MOTOR CREDITO","UNION"]],
-  ["AAyP", ["ABONAP","ALAVER","APAP","CIBAO","DUARTE","LA NACIONAL","MAGUANA","MOCANA","PERAVIA","ROMANA"]],
-  ["CC",   ["LEASING CONFISA","MONUMENTAL","NORPRESA","OFICORP","OPTIMA","REIDCO"]],
-  ["EP",   ["BANCO AGRICOLA","BANDEX"]],
-];
-
 /* ====================================================================== */
 /* Helpers de formato                                                     */
 /* ====================================================================== */
 const fmtNum = new Intl.NumberFormat("es-DO");
 const fmtCom = (v) => v == null ? "—" : fmtNum.format(Math.round(v));
-function fmtMM(v) { // formato millones / billones (corto)
+function fmtMM(v) {
   if (v == null || isNaN(v)) return "—";
   const abs = Math.abs(v);
-  if (abs >= 1e12) return (v/1e12).toFixed(2) + " B";   // billones (dom)
-  if (abs >= 1e9)  return (v/1e9).toFixed(2)  + " MM";  // miles de millones
-  if (abs >= 1e6)  return (v/1e6).toFixed(2)  + " M";   // millones
+  if (abs >= 1e12) return (v/1e12).toFixed(2) + " B";
+  if (abs >= 1e9)  return (v/1e9).toFixed(2)  + " MM";
+  if (abs >= 1e6)  return (v/1e6).toFixed(2)  + " M";
   if (abs >= 1e3)  return (v/1e3).toFixed(1)  + " K";
   return fmtNum.format(v);
 }
 const pct = (v, d=2) => v == null ? "—" : Number(v).toFixed(d) + "%";
-const lastN = (arr, n) => arr.slice(-n);
 
-const PALETTE = ["#4f8cff","#a06cff","#1cc7d0","#29c46f","#ffb84d","#ef5e6f",
-                 "#7fb1ff","#c89cff","#5cd9e0","#5dd391","#ffce80","#ff97a3",
-                 "#3a6dd0","#7d4ed0","#138e94","#1f9b56","#cc8c2f","#cc4555"];
+const PALETTE = ["#2c6df0","#7b4dd6","#0aa3ad","#16a36a","#d68a16","#d73a4f",
+                 "#5e8df2","#a07ee0","#34b8c2","#3ab47b","#dba744","#df5e70",
+                 "#1d4fb0","#5c3aa3","#077c83","#0b8459","#aa6e10","#a82636"];
 
 function chartCommon() {
   return {
     responsive: true, maintainAspectRatio: false,
     plugins: {
-      legend: { labels: { color: "#1a2540" } },
+      legend: { labels: { color: "#1a2540", font:{size:11} } },
       tooltip: { backgroundColor:"#1a2540", titleColor:"#fff", bodyColor:"#fff", borderColor:"#243155", borderWidth:1 },
     },
     scales: {
@@ -386,15 +482,87 @@ function chartCommon() {
 }
 
 /* ====================================================================== */
-/* Estado y filtros UI                                                    */
+/* Estado                                                                 */
 /* ====================================================================== */
 const state = {
   periodoInicial: "",
   periodoFinal: "",
-  selectedEntities: new Set(),     // empty => TODOS
+  selectedEntities: new Set(),  // vacío => TODOS
   charts: {},
+  data: {},  // raw responses por endpoint
+  lastFilterKey: "",
 };
 
+/* ====================================================================== */
+/* PRELOADER (overlay con animación de progreso)                          */
+/* ====================================================================== */
+const Preloader = {
+  steps: [],
+  el: null,
+  init() {
+    this.el = document.getElementById("preloader");
+  },
+  setSteps(steps) {
+    this.steps = steps.map((s, i) => ({ ...s, status: "pending", i }));
+    this.render();
+  },
+  setStatus(idx, status) {
+    if (this.steps[idx]) this.steps[idx].status = status;
+    this.render();
+  },
+  render() {
+    const ul = document.getElementById("stepList");
+    ul.innerHTML = this.steps.map(s =>
+      `<li class="${s.status}"><span class="dot"></span>${s.label}</li>`
+    ).join("");
+    const total = this.steps.length;
+    const done = this.steps.filter(s => s.status === "done" || s.status === "error").length;
+    const pct = total ? Math.round(done / total * 100) : 0;
+    document.getElementById("progressFill").style.width = pct + "%";
+    document.getElementById("progressText").textContent = `${done} / ${total}`;
+    document.getElementById("progressPct").textContent = pct + "%";
+    const active = this.steps.find(s => s.status === "active");
+    document.getElementById("preloaderSub").textContent = active
+      ? active.label
+      : (done === total ? "Listo." : "Consultando datos del Sistema Financiero…");
+  },
+  show() { this.el.classList.remove("hidden"); },
+  hide() { setTimeout(() => this.el.classList.add("hidden"), 250); },
+};
+
+/* ====================================================================== */
+/* Helpers para llamadas con manejo de errores                            */
+/* ====================================================================== */
+function baseParams(extra={}) {
+  const p = {
+    periodoInicial: state.periodoInicial,
+    periodoFinal: state.periodoFinal,
+    paginas: 1, registros: 1000,
+  };
+  if (state.selectedEntities.size > 0) p.entidad = [...state.selectedEntities];
+  else p.tipoEntidad = "BM";   // default razonable: bancos múltiples (no todos para evitar timeouts)
+  return Object.assign(p, extra);
+}
+function latestParams(extra={}) {
+  const p = {
+    periodoInicial: state.periodoFinal,
+    periodoFinal:   state.periodoFinal,
+    paginas: 1, registros: 1000,
+  };
+  if (state.selectedEntities.size > 0) p.entidad = [...state.selectedEntities];
+  else p.tipoEntidad = "BM";
+  return Object.assign(p, extra);
+}
+function safeGet(path, params) {
+  return SB.get(path, params).catch(err => {
+    console.warn("API error", path, err.message);
+    return [];
+  });
+}
+
+/* ====================================================================== */
+/* Charts helpers                                                         */
+/* ====================================================================== */
 function destroyChart(id) {
   if (state.charts[id]) { state.charts[id].destroy(); delete state.charts[id]; }
 }
@@ -405,394 +573,6 @@ function makeChart(id, cfg) {
   state.charts[id] = new Chart(ctx, cfg);
   return state.charts[id];
 }
-
-/* Defaults: últimos 12 meses sobre 2024 (último año completo con datos en SB) */
-function defaultPeriods() {
-  return { ini: "2024-01", fin: "2024-12" };
-}
-
-function renderEntitiesPicker() {
-  const container = document.getElementById("entitiesMulti");
-  container.innerHTML = "";
-  // Fila TODOS
-  const all = document.createElement("span");
-  all.className = "pill" + (state.selectedEntities.size === 0 ? " active" : "");
-  all.textContent = "TODOS";
-  all.onclick = () => { state.selectedEntities.clear(); renderEntitiesPicker(); updateSummaryEntities(); };
-  container.appendChild(all);
-  for (const [tipo, list] of ENTIDADES_EIF) {
-    const sep = document.createElement("span");
-    sep.className = "small";
-    sep.style.cssText = "width:100%;padding:6px 4px 2px;color:var(--muted)";
-    sep.textContent = tipo;
-    container.appendChild(sep);
-    for (const e of list) {
-      const p = document.createElement("span");
-      p.className = "pill" + (state.selectedEntities.has(e) ? " active" : "");
-      p.textContent = e;
-      p.onclick = () => {
-        if (state.selectedEntities.has(e)) state.selectedEntities.delete(e);
-        else state.selectedEntities.add(e);
-        renderEntitiesPicker(); updateSummaryEntities();
-      };
-      container.appendChild(p);
-    }
-  }
-}
-function updateSummaryEntities() {
-  const n = state.selectedEntities.size;
-  document.getElementById("entitiesSummary").textContent =
-    n === 0 ? "Entidades: TODOS" : `Entidades: ${n} seleccionadas`;
-}
-
-/* Helper: parámetros base para queries que cubren todo el rango */
-function baseParams(extra={}) {
-  const p = {
-    periodoInicial: state.periodoInicial,
-    periodoFinal: state.periodoFinal,
-    paginas: 1,
-    registros: 1000,
-  };
-  if (state.selectedEntities.size > 0) p.entidad = [...state.selectedEntities];
-  else p.tipoEntidad = "TODOS";
-  return Object.assign(p, extra);
-}
-
-/* Helper: parámetros para queries de "snapshot" (sólo el último mes del rango).
-   Reduce dramáticamente el payload — usado por cartera, captaciones, comparativa y mapa. */
-function latestParams(extra={}) {
-  const p = {
-    periodoInicial: state.periodoFinal,   // sólo un mes
-    periodoFinal:   state.periodoFinal,
-    paginas: 1,
-    registros: 1000,
-  };
-  if (state.selectedEntities.size > 0) p.entidad = [...state.selectedEntities];
-  else p.tipoEntidad = "TODOS";
-  return Object.assign(p, extra);
-}
-
-/* ====================================================================== */
-/* Tabs y carga lazy por panel                                            */
-/* ====================================================================== */
-const LOADERS = {
-  resumen: loadResumen,
-  cartera: loadCartera,
-  captaciones: loadCaptaciones,
-  comparativa: loadComparativa,
-  mapa: loadMapa,
-  estados: loadEstados,
-  reclamaciones: loadReclamaciones,
-};
-const loadedPanes = new Set();
-
-function showTab(name) {
-  document.querySelectorAll('nav.tabs button').forEach(b => b.classList.toggle("active", b.dataset.tab === name));
-  document.querySelectorAll('section[data-pane]').forEach(s => s.hidden = (s.dataset.pane !== name));
-  if (!loadedPanes.has(name)) {
-    loadedPanes.add(name);
-    runLoader(name);
-  }
-}
-function runLoader(name) {
-  setStatus("cargando…");
-  LOADERS[name]().then(() => setStatus("ok"))
-    .catch(err => { console.error(err); setStatus("error: " + err.message, true); });
-}
-function setStatus(msg, isError=false) {
-  const el = document.getElementById("apiStatus");
-  el.textContent = msg;
-  el.style.background = isError ? "#5a1f30" : "var(--panel-2)";
-  el.style.color = isError ? "#ffb1be" : "var(--muted)";
-}
-
-/* ====================================================================== */
-/* RESUMEN                                                                */
-/* ====================================================================== */
-async function loadResumen() {
-  // 1) KPIs y trends (sistema agregado)
-  const data = await SB.get("/indicadores/principales", {
-    periodoInicial: state.periodoInicial, periodoFinal: state.periodoFinal,
-    paginas: 1, registros: 200,
-  });
-  const sorted = (data || []).slice().sort((a,b) => a.periodo.localeCompare(b.periodo));
-  const last = sorted[sorted.length - 1];
-  if (last) {
-    document.getElementById("kpiActivos").textContent  = fmtMM(last.activos);
-    document.getElementById("kpiSolvencia").textContent = pct(last.solvencia);
-    document.getElementById("kpiCartera").textContent  = fmtMM(last.montoCarteraCredito * 1e6);
-    document.getElementById("kpiMorosidad").textContent = pct(last.morosidad);
-    document.getElementById("kpiRoa").textContent       = pct(last.roa);
-    document.getElementById("kpiTasaActiva").textContent = pct(last.tasaActiva);
-    document.getElementById("kpiTasaPasiva").textContent = pct(last.tasaPasiva);
-    document.getElementById("kpiMargen").textContent     = pct(last.margen);
-  }
-  const labels = sorted.map(d => d.periodo);
-  makeChart("chartTrendActivos", {
-    type: "line",
-    data: { labels, datasets: [
-      { label: "Activos (DOP)",        data: sorted.map(d => d.activos), borderColor: PALETTE[0], backgroundColor:PALETTE[0]+"33", tension:.3, yAxisID:"y" },
-      { label: "Cartera (mill. DOP)",  data: sorted.map(d => d.montoCarteraCredito), borderColor: PALETTE[2], backgroundColor:PALETTE[2]+"33", tension:.3, yAxisID:"y2" },
-    ] },
-    options: { ...chartCommon(),
-      scales: { ...chartCommon().scales,
-        y:  { ...chartCommon().scales.y, position:"left",  title:{display:true,text:"Activos",color:"#8a97b8"}},
-        y2: { ...chartCommon().scales.y, position:"right", grid:{drawOnChartArea:false}, title:{display:true,text:"Cartera (mill.)",color:"#8a97b8"}},
-      } },
-  });
-  makeChart("chartTrendRatios", {
-    type: "line",
-    data: { labels, datasets: [
-      { label:"Solvencia", data: sorted.map(d => d.solvencia), borderColor:PALETTE[3], backgroundColor:PALETTE[3]+"33", tension:.3 },
-      { label:"ROA",       data: sorted.map(d => d.roa),       borderColor:PALETTE[0], backgroundColor:PALETTE[0]+"33", tension:.3 },
-      { label:"Morosidad", data: sorted.map(d => d.morosidad), borderColor:PALETTE[5], backgroundColor:PALETTE[5]+"33", tension:.3 },
-    ] }, options: chartCommon(),
-  });
-  makeChart("chartTasas", {
-    type: "line",
-    data: { labels, datasets: [
-      { label:"Tasa activa", data: sorted.map(d=>d.tasaActiva), borderColor:PALETTE[0], tension:.3 },
-      { label:"Tasa pasiva", data: sorted.map(d=>d.tasaPasiva), borderColor:PALETTE[1], tension:.3 },
-      { label:"Margen",      data: sorted.map(d=>d.margen),     borderColor:PALETTE[4], tension:.3 },
-    ] }, options: chartCommon(),
-  });
-
-  // 2) Morosidad estresada (último periodo del rango)
-  try {
-    const me = await SB.get("/indicadores/morosidad-estresada", latestParams());
-    const last = (me || []).slice().sort((a,b)=>a.periodo.localeCompare(b.periodo)).pop();
-    if (last) {
-      const fields = ["vencido","cobranza","tc31a60","reestructuradoRea","reestructuradoTemporal","castigos","adjudicado"];
-      const labels = ["Vencido","Cobranza judicial","TC 31-60d","Reestruc. REA","Reestruc. temporal","Castigos","Adjudicado"];
-      makeChart("chartMorosidadEstresada", {
-        type: "bar",
-        data: { labels, datasets: [{
-          label: `${last.periodo} — % cartera total`,
-          data: fields.map(f => (last[f] / last.carteraTotal) * 100),
-          backgroundColor: PALETTE,
-        }] },
-        options: { ...chartCommon(), indexAxis: "y" },
-      });
-    }
-  } catch (e) { console.warn("morosidad estresada:", e.message); }
-}
-
-/* ====================================================================== */
-/* CARTERA                                                                */
-/* ====================================================================== */
-async function loadCartera() {
-  const p = latestParams();
-  // Por tipo
-  const tipo = await SB.get("/carteras/creditos/tipo", p);
-  aggDonut("chartCarteraTipo", tipo, "tipoCartera", "deuda");
-
-  // Por sector económico (top 12)
-  const sec = await SB.get("/carteras/creditos/sectores-economicos", p);
-  aggBarTop("chartCarteraSector", sec, "sectorEconomico", "deuda", 12);
-
-  // Por moneda
-  const mon = await SB.get("/carteras/creditos/moneda", p);
-  aggDonut("chartCarteraMoneda", mon, "tipoMoneda", "deuda");
-
-  // Por género
-  const gen = await SB.get("/carteras/creditos/genero", p);
-  aggDonut("chartCarteraGenero", gen, "genero", "deuda");
-
-  // Riesgo
-  const rgo = await SB.get("/carteras/creditos/clasificacion-riesgo", p);
-  aggBarTop("chartCarteraRiesgo", rgo, "clasificacionRiesgo", "deuda", 10);
-
-  // Tipo facilidad
-  const fac = await SB.get("/carteras/creditos/facilidad", p);
-  aggBarTop("chartCarteraFacilidad", fac, "facilidad", "deuda", 12);
-}
-
-/* ====================================================================== */
-/* CAPTACIONES                                                            */
-/* ====================================================================== */
-async function loadCaptaciones() {
-  const p = latestParams();
-  const mon = await SB.get("/captaciones/moneda", p);
-  aggBarTop("chartCaptMoneda", mon, "instrumentoCaptacion", "balance", 14);
-  const sec = await SB.get("/captaciones/sector-depositante", p);
-  // agregar por publicoPrivado-financiero combinación
-  const buckets = {};
-  for (const r of (sec || [])) {
-    const k = `${r.publicoPrivado||"?"} / ${r.financieroNoFinanciero||"?"}`;
-    buckets[k] = (buckets[k]||0) + (r.balance||0);
-  }
-  const entries = Object.entries(buckets).sort((a,b)=>b[1]-a[1]);
-  makeChart("chartCaptSector", {
-    type:"bar",
-    data:{ labels: entries.map(e=>e[0]), datasets:[{ label:"Balance", data: entries.map(e=>e[1]), backgroundColor:PALETTE }]},
-    options:{ ...chartCommon(), indexAxis:"y" }
-  });
-}
-
-/* ====================================================================== */
-/* COMPARATIVA                                                            */
-/* ====================================================================== */
-async function loadComparativa() {
-  const indicadores = ["ROA (Rentabilidad de los Activos)",
-                       "Indice de Solvencia",
-                       "Cartera de Créditos Vencida (Capital y Rendimientos) / Total de Cartera de Crédito Bruta",
-                       "Total Patrimonio Neto"];
-  // Pedimos los 4 indicadores en una sola llamada al endpoint, sólo último mes
-  const data = await SB.get("/indicadores/financieros", latestParams({ indicador: indicadores }));
-  // Filtrar al último periodo y agrupar por entidad
-  const byPeriod = (data||[]).reduce((m,r)=>{m[r.periodo]=true;return m;}, {});
-  const lastPeriod = Object.keys(byPeriod).sort().pop();
-  const recent = (data||[]).filter(r => r.periodo === lastPeriod);
-
-  const grab = (indName) => recent.filter(r => r.indicador === indName)
-                                    .map(r => ({ entidad: r.entidad, valor: r.valor }));
-  const roa  = grab(indicadores[0]).sort((a,b)=>b.valor-a.valor).slice(0, 18);
-  const solv = grab(indicadores[1]).sort((a,b)=>b.valor-a.valor).slice(0, 18);
-  const moro = grab(indicadores[2]).sort((a,b)=>a.valor-b.valor).slice(0, 18);
-  const pat  = grab(indicadores[3]).sort((a,b)=>b.valor-a.valor).slice(0, 18);
-
-  rankBar("chartRankRoa",  roa,  "ROA %",       PALETTE[3]);
-  rankBar("chartRankSolv", solv, "Solvencia %", PALETTE[0]);
-  rankBar("chartRankMoro", moro, "Morosidad %", PALETTE[5]);
-  rankBar("chartRankPat",  pat,  "Patrimonio Neto", PALETTE[1]);
-}
-function rankBar(id, rows, label, color) {
-  makeChart(id, {
-    type:"bar",
-    data:{ labels: rows.map(r=>r.entidad),
-           datasets:[{ label, data: rows.map(r=>r.valor), backgroundColor: color }]},
-    options:{ ...chartCommon(), indexAxis:"y" }
-  });
-}
-
-/* ====================================================================== */
-/* MAPA POR PROVINCIA                                                     */
-/* ====================================================================== */
-let mapInstance = null;
-let mapLayer = null;
-const PROVS_GEOJSON_URL = "/api/geo/provincias";
-async function loadMapa() {
-  if (!mapInstance) {
-    mapInstance = L.map('map', { zoomControl: true, attributionControl: false }).setView([18.7, -70.2], 8);
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '&copy; OpenStreetMap, &copy; CARTO' }).addTo(mapInstance);
-  }
-  const metric = document.getElementById("mapMetric").value;
-  let rows = [];
-  if (metric === "cartera") {
-    const data = await SB.get("/carteras/creditos/localidad", latestParams());
-    rows = (data||[]).map(r => ({ provincia: r.provincia, valor: r.deuda }));
-  } else {
-    const data = await SB.get("/captaciones/localidad", latestParams());
-    rows = (data||[]).map(r => ({ provincia: r.provincia, valor: r.balance }));
-  }
-  // sumar por provincia
-  const sums = {};
-  for (const r of rows) {
-    const k = (r.provincia||"").toUpperCase().trim();
-    sums[k] = (sums[k]||0) + (r.valor||0);
-  }
-  // Cargar GeoJSON una sola vez
-  if (!loadMapa._geo) {
-    loadMapa._geo = await fetch(PROVS_GEOJSON_URL).then(r=>r.json());
-  }
-  const geo = loadMapa._geo;
-  const values = Object.values(sums);
-  const max = Math.max(...values, 1);
-  const min = Math.min(...values, 0);
-  function color(v) {
-    const t = max === min ? 0.5 : (v - min) / (max - min);
-    // gradiente claro: blanco-azul → azul → violeta
-    const c1 = [232,238,247], c2=[44,109,240], c3=[123,77,214];
-    const mix = (a,b,t) => a.map((x,i)=>Math.round(x+(b[i]-x)*t));
-    const rgb = t < 0.5 ? mix(c1,c2,t*2) : mix(c2,c3,(t-0.5)*2);
-    return `rgb(${rgb.join(",")})`;
-  }
-  if (mapLayer) mapInstance.removeLayer(mapLayer);
-  mapLayer = L.geoJSON(geo, {
-    style: f => {
-      const name = (f.properties.name || f.properties.NAME || "").toUpperCase().replace("PROVINCE","").trim();
-      const v = sums[name] || 0;
-      return { color:"#ffffff", weight:1, fillColor: color(v), fillOpacity: .85 };
-    },
-    onEachFeature: (f, layer) => {
-      const name = (f.properties.name || f.properties.NAME || "").toUpperCase().replace("PROVINCE","").trim();
-      const v = sums[name] || 0;
-      layer.bindTooltip(`<b>${name}</b><br/>${metric}: ${fmtMM(v)} DOP`, {sticky:true});
-    },
-  }).addTo(mapInstance);
-  try { mapInstance.fitBounds(mapLayer.getBounds(), {padding:[20,20]}); } catch(e){}
-}
-document.addEventListener("change", e => {
-  if (e.target.id === "mapMetric") { loadMapa().catch(err => setStatus(err.message, true)); }
-});
-
-/* ====================================================================== */
-/* ESTADOS FINANCIEROS                                                    */
-/* ====================================================================== */
-async function loadEstados() {
-  // El balance trend usa el rango completo, pero si TODOS hace timeout
-  // limitamos a la EIF tipo BM (bancos múltiples) que es lo más representativo.
-  const trendParams = (state.selectedEntities.size > 0)
-    ? baseParams()
-    : baseParams({ tipoEntidad: "BM" });
-  const sit = await SB.get("/estados/situacion/eif", trendParams);
-  // Agregar por periodo y conceptoNivel1 (Activos / Pasivos / Patrimonio)
-  const periods = [...new Set((sit||[]).map(r=>r.periodo))].sort();
-  const groups = ["Activos","Pasivos","Patrimonio"];
-  const series = groups.map((g, i) => ({
-    label: g, borderColor: PALETTE[i], backgroundColor: PALETTE[i]+"33", tension:.3,
-    data: periods.map(p => (sit||[]).filter(r => r.periodo === p && (r.conceptoNivel1||"").toLowerCase().startsWith(g.toLowerCase()))
-      .reduce((s,r)=>s+(r.valor||0), 0)),
-  }));
-  makeChart("chartBalanceTrend", {
-    type:"line", data:{ labels: periods, datasets: series }, options: chartCommon()
-  });
-
-  // Estado de resultados último periodo — tabla simple top conceptoNivel2
-  const res = await SB.get("/estados/resultados/eif", latestParams());
-  const lastP = [...new Set((res||[]).map(r=>r.periodo))].sort().pop();
-  const filtered = (res||[]).filter(r => r.periodo === lastP);
-  const byN2 = {};
-  for (const r of filtered) {
-    const k = r.conceptoNivel2 || r.conceptoNivel1 || "—";
-    byN2[k] = (byN2[k]||0) + (r.valor||0);
-  }
-  const rows = Object.entries(byN2).sort((a,b)=>Math.abs(b[1])-Math.abs(a[1])).slice(0,20);
-  document.getElementById("resultadosTbl").innerHTML = `
-    <table class="data">
-      <thead><tr><th>Concepto</th><th class="num">Valor (${lastP||""})</th></tr></thead>
-      <tbody>${rows.map(([k,v])=>`<tr><td>${k}</td><td class="num">${fmtCom(v)}</td></tr>`).join("")}</tbody>
-    </table>`;
-}
-
-/* ====================================================================== */
-/* RECLAMACIONES                                                          */
-/* ====================================================================== */
-async function loadReclamaciones() {
-  const eif = await SB.get("/reclamaciones/eif", latestParams());
-  const lastP = [...new Set((eif||[]).map(r=>r.periodo))].sort().pop();
-  const recent = (eif||[]).filter(r => r.periodo === lastP);
-  const byProd = {};
-  for (const r of recent) byProd[r.productoServicio||"—"] = (byProd[r.productoServicio||"—"]||0) + (r.cantidad||0);
-  const prodEntries = Object.entries(byProd).sort((a,b)=>b[1]-a[1]).slice(0,15);
-  makeChart("chartReclamProducto", {
-    type:"bar",
-    data:{ labels: prodEntries.map(e=>e[0]), datasets:[{ label:`Reclamos ${lastP||""}`, data: prodEntries.map(e=>e[1]), backgroundColor: PALETTE[0]}]},
-    options:{ ...chartCommon(), indexAxis:"y" }
-  });
-  const byRes = {};
-  for (const r of recent) byRes[r.resultadoReclamacion||"—"] = (byRes[r.resultadoReclamacion||"—"]||0) + (r.cantidad||0);
-  const resEntries = Object.entries(byRes).sort((a,b)=>b[1]-a[1]);
-  makeChart("chartReclamResultado", {
-    type:"doughnut",
-    data:{ labels: resEntries.map(e=>e[0]), datasets:[{ data: resEntries.map(e=>e[1]), backgroundColor: PALETTE }]},
-    options: chartCommon(),
-  });
-}
-
-/* ====================================================================== */
-/* Helpers de agregación                                                  */
-/* ====================================================================== */
 function aggDonut(canvasId, rows, dimKey, valKey) {
   const buckets = {};
   for (const r of (rows || [])) {
@@ -800,6 +580,7 @@ function aggDonut(canvasId, rows, dimKey, valKey) {
     buckets[k] = (buckets[k]||0) + (r[valKey]||0);
   }
   const entries = Object.entries(buckets).sort((a,b)=>b[1]-a[1]);
+  if (!entries.length) return showEmpty(canvasId);
   makeChart(canvasId, {
     type:"doughnut",
     data:{ labels: entries.map(e=>e[0]), datasets:[{ data: entries.map(e=>e[1]), backgroundColor: PALETTE }]},
@@ -813,45 +594,490 @@ function aggBarTop(canvasId, rows, dimKey, valKey, topN) {
     buckets[k] = (buckets[k]||0) + (r[valKey]||0);
   }
   const entries = Object.entries(buckets).sort((a,b)=>b[1]-a[1]).slice(0, topN);
+  if (!entries.length) return showEmpty(canvasId);
   makeChart(canvasId, {
     type:"bar",
     data:{ labels: entries.map(e=>e[0]), datasets:[{ label:"Total", data: entries.map(e=>e[1]), backgroundColor: PALETTE[0]}]},
     options:{ ...chartCommon(), indexAxis: "y" }
   });
 }
+function showEmpty(canvasId) {
+  const ctx = document.getElementById(canvasId);
+  if (!ctx) return;
+  destroyChart(canvasId);
+  const wrap = ctx.parentElement;
+  if (!wrap.querySelector(".empty")) {
+    const div = document.createElement("div");
+    div.className = "empty";
+    div.innerHTML = `<div class="icon">∅</div>Sin datos para el filtro actual`;
+    wrap.appendChild(div);
+  }
+}
+function clearEmpty(canvasId) {
+  const ctx = document.getElementById(canvasId);
+  if (!ctx) return;
+  const empty = ctx.parentElement.querySelector(".empty");
+  if (empty) empty.remove();
+}
+
+/* ====================================================================== */
+/* Loaders por panel                                                      */
+/* ====================================================================== */
+async function loadResumen() {
+  // Indicadores principales (sistema agregado, no acepta filtro de entidad)
+  const data = await safeGet("/indicadores/principales", {
+    periodoInicial: state.periodoInicial,
+    periodoFinal: state.periodoFinal,
+    paginas: 1, registros: 200,
+  });
+  const sorted = (data || []).slice().sort((a,b)=>(a.periodo||"").localeCompare(b.periodo||""));
+  const last = sorted[sorted.length - 1];
+  if (last) {
+    document.getElementById("kpiActivos").textContent  = fmtMM(last.activos);
+    document.getElementById("kpiSolvencia").textContent = pct(last.solvencia);
+    document.getElementById("kpiCartera").textContent  = fmtMM(last.montoCarteraCredito * 1e6);
+    document.getElementById("kpiMorosidad").textContent = pct(last.morosidad);
+    document.getElementById("kpiRoa").textContent       = pct(last.roa);
+    document.getElementById("kpiTasaActiva").textContent = pct(last.tasaActiva);
+    document.getElementById("kpiTasaPasiva").textContent = pct(last.tasaPasiva);
+    document.getElementById("kpiMargen").textContent     = pct(last.margen);
+  }
+  const labels = sorted.map(d => d.periodo);
+  if (labels.length) {
+    makeChart("chartTrendActivos", {
+      type: "line",
+      data: { labels, datasets: [
+        { label: "Activos (DOP)", data: sorted.map(d => d.activos), borderColor: PALETTE[0], backgroundColor:PALETTE[0]+"33", tension:.3, yAxisID:"y" },
+        { label: "Cartera (mill. DOP)", data: sorted.map(d => d.montoCarteraCredito), borderColor: PALETTE[2], backgroundColor:PALETTE[2]+"33", tension:.3, yAxisID:"y2" },
+      ] },
+      options: { ...chartCommon(),
+        scales: { ...chartCommon().scales,
+          y:  { ...chartCommon().scales.y, position:"left",  title:{display:true,text:"Activos",color:"#6c7b95"}},
+          y2: { ...chartCommon().scales.y, position:"right", grid:{drawOnChartArea:false}, title:{display:true,text:"Cartera (mill.)",color:"#6c7b95"}},
+        } },
+    });
+    makeChart("chartTrendRatios", {
+      type: "line",
+      data: { labels, datasets: [
+        { label:"Solvencia", data: sorted.map(d => d.solvencia), borderColor:PALETTE[3], tension:.3 },
+        { label:"ROA",       data: sorted.map(d => d.roa),       borderColor:PALETTE[0], tension:.3 },
+        { label:"Morosidad", data: sorted.map(d => d.morosidad), borderColor:PALETTE[5], tension:.3 },
+      ] }, options: chartCommon(),
+    });
+    makeChart("chartTasas", {
+      type: "line",
+      data: { labels, datasets: [
+        { label:"Tasa activa", data: sorted.map(d=>d.tasaActiva), borderColor:PALETTE[0], tension:.3 },
+        { label:"Tasa pasiva", data: sorted.map(d=>d.tasaPasiva), borderColor:PALETTE[1], tension:.3 },
+        { label:"Margen",      data: sorted.map(d=>d.margen),     borderColor:PALETTE[4], tension:.3 },
+      ] }, options: chartCommon(),
+    });
+  }
+
+  // Morosidad estresada
+  const me = await safeGet("/indicadores/morosidad-estresada", latestParams());
+  const lastME = (me || []).slice().sort((a,b)=>(a.periodo||"").localeCompare(b.periodo||"")).pop();
+  if (lastME) {
+    const fields = ["vencido","cobranza","tc31a60","reestructuradoRea","reestructuradoTemporal","castigos","adjudicado"];
+    const labels = ["Vencido","Cobranza judicial","TC 31-60d","Reestruc. REA","Reestruc. temporal","Castigos","Adjudicado"];
+    makeChart("chartMorosidadEstresada", {
+      type: "bar",
+      data: { labels, datasets: [{
+        label: `${lastME.periodo} — % cartera total`,
+        data: fields.map(f => (lastME[f] / lastME.carteraTotal) * 100),
+        backgroundColor: PALETTE,
+      }] },
+      options: { ...chartCommon(), indexAxis: "y" },
+    });
+  } else {
+    showEmpty("chartMorosidadEstresada");
+  }
+}
+
+async function loadCartera() {
+  const p = latestParams();
+  const [tipo, sec, mon, gen, rgo, fac] = await Promise.all([
+    safeGet("/carteras/creditos/tipo", p),
+    safeGet("/carteras/creditos/sectores-economicos", p),
+    safeGet("/carteras/creditos/moneda", p),
+    safeGet("/carteras/creditos/genero", p),
+    safeGet("/carteras/creditos/clasificacion-riesgo", p),
+    safeGet("/carteras/creditos/facilidad", p),
+  ]);
+  aggDonut("chartCarteraTipo", tipo, "tipoCartera", "deuda");
+  aggBarTop("chartCarteraSector", sec, "sectorEconomico", "deuda", 12);
+  aggDonut("chartCarteraMoneda", mon, "tipoMoneda", "deuda");
+  aggDonut("chartCarteraGenero", gen, "genero", "deuda");
+  aggBarTop("chartCarteraRiesgo", rgo, "clasificacionRiesgo", "deuda", 10);
+  aggBarTop("chartCarteraFacilidad", fac, "facilidad", "deuda", 12);
+}
+
+async function loadCaptaciones() {
+  const p = latestParams();
+  const [mon, sec] = await Promise.all([
+    safeGet("/captaciones/moneda", p),
+    safeGet("/captaciones/sector-depositante", p),
+  ]);
+  aggBarTop("chartCaptMoneda", mon, "instrumentoCaptacion", "balance", 14);
+  // Combinar dimensiones
+  const buckets = {};
+  for (const r of (sec || [])) {
+    const k = `${r.publicoPrivado||"?"} / ${r.financieroNoFinanciero||"?"}`;
+    buckets[k] = (buckets[k]||0) + (r.balance||0);
+  }
+  const entries = Object.entries(buckets).sort((a,b)=>b[1]-a[1]);
+  if (entries.length) {
+    makeChart("chartCaptSector", {
+      type:"bar",
+      data:{ labels: entries.map(e=>e[0]), datasets:[{ label:"Balance", data: entries.map(e=>e[1]), backgroundColor:PALETTE }]},
+      options:{ ...chartCommon(), indexAxis:"y" }
+    });
+  } else { showEmpty("chartCaptSector"); }
+}
+
+async function loadComparativa() {
+  const indicadores = [
+    "ROA (Rentabilidad de los Activos)",
+    "Indice de Solvencia",
+    "Cartera de Créditos Vencida (Capital y Rendimientos) / Total de Cartera de Crédito Bruta",
+    "Total Patrimonio Neto",
+  ];
+  // Probamos el último mes; si está vacío vamos retrocediendo hasta 6 meses
+  let data = [];
+  let testPeriod = state.periodoFinal;
+  for (let i = 0; i < 6 && !data.length; i++) {
+    data = await safeGet("/indicadores/financieros", {
+      periodoInicial: testPeriod, periodoFinal: testPeriod,
+      paginas: 1, registros: 1000,
+      tipoEntidad: state.selectedEntities.size ? undefined : "BM",
+      entidad: state.selectedEntities.size ? [...state.selectedEntities] : undefined,
+      indicador: indicadores,
+    });
+    if (!data.length) testPeriod = prevMonth(testPeriod);
+  }
+  const grab = (n) => data.filter(r => r.indicador === n).map(r => ({ entidad: r.entidad, valor: r.valor }));
+  rankBar("chartRankRoa",  grab(indicadores[0]).sort((a,b)=>b.valor-a.valor).slice(0, 18), "ROA %",       PALETTE[3]);
+  rankBar("chartRankSolv", grab(indicadores[1]).sort((a,b)=>b.valor-a.valor).slice(0, 18), "Solvencia %", PALETTE[0]);
+  rankBar("chartRankMoro", grab(indicadores[2]).sort((a,b)=>a.valor-b.valor).slice(0, 18), "Morosidad %", PALETTE[5]);
+  rankBar("chartRankPat",  grab(indicadores[3]).sort((a,b)=>b.valor-a.valor).slice(0, 18), "Patrimonio Neto", PALETTE[1]);
+}
+function prevMonth(ym) {
+  const [y,m] = ym.split("-").map(Number);
+  const d = new Date(y, m-2, 1); // m-1 es el mes actual; -1 más para retroceder
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;
+}
+function rankBar(id, rows, label, color) {
+  if (!rows.length) return showEmpty(id);
+  makeChart(id, {
+    type:"bar",
+    data:{ labels: rows.map(r=>r.entidad),
+           datasets:[{ label, data: rows.map(r=>r.valor), backgroundColor: color }]},
+    options:{ ...chartCommon(), indexAxis:"y" }
+  });
+}
+
+let mapInstance = null;
+let mapLayer = null;
+async function loadMapa() {
+  if (!mapInstance) {
+    mapInstance = L.map('map', { zoomControl: true, attributionControl: false }).setView([18.7, -70.2], 8);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png', {
+      maxZoom: 18, attribution: '&copy; OSM &copy; CARTO'
+    }).addTo(mapInstance);
+  }
+  const metric = document.getElementById("mapMetric").value;
+  const path = metric === "cartera" ? "/carteras/creditos/localidad" : "/captaciones/localidad";
+  const valField = metric === "cartera" ? "deuda" : "balance";
+  const data = await safeGet(path, latestParams());
+  const sums = {};
+  for (const r of (data||[])) {
+    const k = (r.provincia || "").toUpperCase().trim();
+    sums[k] = (sums[k]||0) + (r[valField]||0);
+  }
+  if (mapLayer) { mapInstance.removeLayer(mapLayer); mapLayer = null; }
+  const values = Object.values(sums).filter(v => v > 0);
+  if (!values.length) return;
+  const max = Math.max(...values);
+  const min = Math.min(...values);
+  const group = L.featureGroup();
+  for (const [name, [lat, lng]] of Object.entries(PROVINCIAS)) {
+    const v = sums[name] || 0;
+    if (v === 0) continue;
+    const t = max === min ? 0.5 : (v - min) / (max - min);
+    const radius = 8 + t * 32; // 8–40 px
+    const c1 = [44,109,240], c2=[123,77,214];
+    const mix = (a,b,tt) => a.map((x,i)=>Math.round(x+(b[i]-x)*tt));
+    const rgb = mix(c1, c2, t);
+    const color = `rgb(${rgb.join(",")})`;
+    const m = L.circleMarker([lat, lng], {
+      radius, color: "#fff", weight: 2, fillColor: color, fillOpacity: 0.85,
+    });
+    m.bindTooltip(`<b>${name}</b><br/>${metric}: ${fmtMM(v)} DOP`, { sticky: true });
+    m.addTo(group);
+  }
+  mapLayer = group.addTo(mapInstance);
+  try { mapInstance.fitBounds(group.getBounds(), { padding: [30, 30] }); } catch(e){}
+}
+document.addEventListener("change", e => {
+  if (e.target.id === "mapMetric") loadMapa().catch(err => console.error(err));
+});
+
+async function loadEstados() {
+  // El balance trend usa el rango completo
+  const sit = await safeGet("/estados/situacion/eif", baseParams());
+  const periods = [...new Set((sit||[]).map(r=>r.periodo))].sort();
+  const groups = ["Activos","Pasivos","Patrimonio"];
+  const series = groups.map((g, i) => ({
+    label: g, borderColor: PALETTE[i], backgroundColor: PALETTE[i]+"22", tension:.3, fill: false,
+    data: periods.map(p => (sit||[]).filter(r => r.periodo === p && (r.conceptoNivel1||"").toLowerCase().startsWith(g.toLowerCase()))
+      .reduce((s,r)=>s+(r.valor||0), 0)),
+  }));
+  if (periods.length) {
+    makeChart("chartBalanceTrend", { type:"line", data:{ labels: periods, datasets: series }, options: chartCommon() });
+  } else {
+    showEmpty("chartBalanceTrend");
+  }
+
+  const res = await safeGet("/estados/resultados/eif", latestParams());
+  const lastP = [...new Set((res||[]).map(r=>r.periodo))].sort().pop();
+  const filtered = (res||[]).filter(r => r.periodo === lastP);
+  const byN2 = {};
+  for (const r of filtered) {
+    const k = r.conceptoNivel2 || r.conceptoNivel1 || "—";
+    byN2[k] = (byN2[k]||0) + (r.valor||0);
+  }
+  const rows = Object.entries(byN2).sort((a,b)=>Math.abs(b[1])-Math.abs(a[1])).slice(0,20);
+  document.getElementById("resultadosTbl").innerHTML = rows.length ? `
+    <table class="data">
+      <thead><tr><th>Concepto</th><th class="num">Valor (${lastP||""})</th></tr></thead>
+      <tbody>${rows.map(([k,v])=>`<tr><td>${k}</td><td class="num">${fmtCom(v)}</td></tr>`).join("")}</tbody>
+    </table>` : `<div class="empty"><div class="icon">∅</div>Sin datos</div>`;
+}
+
+async function loadReclamaciones() {
+  const eif = await safeGet("/reclamaciones/eif", latestParams());
+  const lastP = [...new Set((eif||[]).map(r=>r.periodo))].sort().pop();
+  const recent = (eif||[]).filter(r => r.periodo === lastP);
+  const byProd = {};
+  for (const r of recent) byProd[r.productoServicio||"—"] = (byProd[r.productoServicio||"—"]||0) + (r.cantidad||0);
+  const prodEntries = Object.entries(byProd).sort((a,b)=>b[1]-a[1]).slice(0,15);
+  if (prodEntries.length) {
+    makeChart("chartReclamProducto", {
+      type:"bar",
+      data:{ labels: prodEntries.map(e=>e[0]), datasets:[{ label:`Reclamos ${lastP||""}`, data: prodEntries.map(e=>e[1]), backgroundColor: PALETTE[0]}]},
+      options:{ ...chartCommon(), indexAxis:"y" }
+    });
+  } else { showEmpty("chartReclamProducto"); }
+
+  const byRes = {};
+  for (const r of recent) byRes[r.resultadoReclamacion||"—"] = (byRes[r.resultadoReclamacion||"—"]||0) + (r.cantidad||0);
+  const resEntries = Object.entries(byRes).sort((a,b)=>b[1]-a[1]);
+  if (resEntries.length) {
+    makeChart("chartReclamResultado", {
+      type:"doughnut",
+      data:{ labels: resEntries.map(e=>e[0]), datasets:[{ data: resEntries.map(e=>e[1]), backgroundColor: PALETTE }]},
+      options: chartCommon(),
+    });
+  } else { showEmpty("chartReclamResultado"); }
+}
+
+/* ====================================================================== */
+/* Pre-load de TODO al inicio (con progreso)                              */
+/* ====================================================================== */
+const PIPELINE = [
+  { key: "resumen",      label: "Resumen del sistema",       fn: loadResumen },
+  { key: "cartera",      label: "Cartera de créditos",       fn: loadCartera },
+  { key: "captaciones",  label: "Captaciones",               fn: loadCaptaciones },
+  { key: "comparativa",  label: "Comparativa entre bancos",  fn: loadComparativa },
+  { key: "mapa",         label: "Mapa por provincia",        fn: loadMapa },
+  { key: "estados",      label: "Estados financieros",       fn: loadEstados },
+  { key: "reclamaciones",label: "Reclamaciones",             fn: loadReclamaciones },
+];
+
+async function preloadAll() {
+  Preloader.show();
+  Preloader.setSteps(PIPELINE.map(p => ({ key: p.key, label: p.label })));
+  setStatus("cargando…");
+  for (let i = 0; i < PIPELINE.length; i++) {
+    Preloader.setStatus(i, "active");
+    try {
+      // Mapa requiere que el contenedor exista y sea visible para Leaflet calcular tamaño
+      if (PIPELINE[i].key === "mapa") {
+        const sec = document.querySelector('section[data-pane="mapa"]');
+        const wasHidden = sec.hidden;
+        sec.hidden = false;
+        await PIPELINE[i].fn();
+        if (mapInstance) mapInstance.invalidateSize();
+        sec.hidden = wasHidden;
+      } else {
+        await PIPELINE[i].fn();
+      }
+      Preloader.setStatus(i, "done");
+    } catch (err) {
+      console.error(PIPELINE[i].key, err);
+      Preloader.setStatus(i, "error");
+    }
+  }
+  setStatus("ok", "ok");
+  Preloader.hide();
+}
+
+function setStatus(msg, kind="") {
+  const el = document.getElementById("apiStatus");
+  el.textContent = msg;
+  el.className = "badge " + kind;
+}
+
+/* ====================================================================== */
+/* Tabs                                                                   */
+/* ====================================================================== */
+function showTab(name) {
+  document.querySelectorAll('nav.tabs button').forEach(b => b.classList.toggle("active", b.dataset.tab === name));
+  document.querySelectorAll('section[data-pane]').forEach(s => s.hidden = (s.dataset.pane !== name));
+  if (name === "mapa" && mapInstance) {
+    setTimeout(() => mapInstance.invalidateSize(), 30);
+  }
+}
+
+/* ====================================================================== */
+/* Selector de entidades (mejorado)                                       */
+/* ====================================================================== */
+const Entities = {
+  init() {
+    this.trigger = document.getElementById("entityTrigger");
+    this.popover = document.getElementById("entityPopover");
+    this.list = document.getElementById("entityList");
+    this.search = document.getElementById("entitySearch");
+
+    this.trigger.addEventListener("click", () => this.toggle());
+    document.addEventListener("click", (e) => {
+      if (!this.popover.contains(e.target) && !this.trigger.contains(e.target)) this.close();
+    });
+    this.search.addEventListener("input", () => this.render());
+    document.getElementById("entitySelectAll").onclick = () => { this.selectAll(); };
+    document.getElementById("entitySelectNone").onclick = () => { this.selectNone(); };
+    document.getElementById("entityBM").onclick = () => { this.selectBM(); };
+    document.getElementById("entityApply").onclick = () => { this.close(); this.apply(); };
+
+    this.render();
+    this.updateLabel();
+  },
+  toggle() { this.popover.classList.toggle("open"); if (this.popover.classList.contains("open")) this.search.focus(); },
+  close() { this.popover.classList.remove("open"); },
+  render() {
+    const q = this.search.value.trim().toLowerCase();
+    const html = ENTIDADES_EIF.map(([code, name, list]) => {
+      const filtered = list.filter(e => !q || e.toLowerCase().includes(q) || code.toLowerCase().includes(q) || name.toLowerCase().includes(q));
+      if (!filtered.length) return "";
+      return `
+        <div class="entity-group">
+          <div class="entity-group-head">
+            <span>${code} — ${name}</span>
+            <button data-action="group-toggle" data-code="${code}">marcar grupo</button>
+          </div>
+          ${filtered.map(e => `
+            <label class="entity-row ${state.selectedEntities.has(e) ? "selected" : ""}">
+              <input type="checkbox" data-name="${e}" ${state.selectedEntities.has(e) ? "checked" : ""} />
+              <span>${e}</span>
+            </label>
+          `).join("")}
+        </div>
+      `;
+    }).join("");
+    this.list.innerHTML = html || `<div class="empty"><div class="icon">∅</div>Sin coincidencias</div>`;
+    // wire events
+    this.list.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+      cb.addEventListener("change", () => {
+        const name = cb.dataset.name;
+        if (cb.checked) state.selectedEntities.add(name);
+        else state.selectedEntities.delete(name);
+        cb.closest(".entity-row").classList.toggle("selected", cb.checked);
+        this.updateCount();
+      });
+    });
+    this.list.querySelectorAll('[data-action="group-toggle"]').forEach(btn => {
+      btn.addEventListener("click", () => {
+        const code = btn.dataset.code;
+        const grp = ENTIDADES_EIF.find(g => g[0] === code);
+        if (!grp) return;
+        const allSel = grp[2].every(e => state.selectedEntities.has(e));
+        for (const e of grp[2]) {
+          if (allSel) state.selectedEntities.delete(e);
+          else state.selectedEntities.add(e);
+        }
+        this.render();
+        this.updateCount();
+      });
+    });
+    this.updateCount();
+  },
+  updateCount() {
+    document.getElementById("entitySelCount").textContent = state.selectedEntities.size;
+  },
+  updateLabel() {
+    const label = document.getElementById("entityLabel");
+    const count = document.getElementById("entityCount");
+    if (state.selectedEntities.size === 0) {
+      label.textContent = "Bancos Múltiples (default)";
+      count.hidden = true;
+    } else if (state.selectedEntities.size === 1) {
+      label.textContent = [...state.selectedEntities][0];
+      count.hidden = true;
+    } else {
+      label.textContent = "Seleccionadas";
+      count.textContent = state.selectedEntities.size;
+      count.hidden = false;
+    }
+  },
+  selectAll() {
+    for (const [, , list] of ENTIDADES_EIF) for (const e of list) state.selectedEntities.add(e);
+    this.render();
+  },
+  selectNone() { state.selectedEntities.clear(); this.render(); },
+  selectBM() {
+    state.selectedEntities.clear();
+    const bm = ENTIDADES_EIF.find(g => g[0] === "BM");
+    if (bm) for (const e of bm[2]) state.selectedEntities.add(e);
+    this.render();
+  },
+  apply() {
+    this.updateLabel();
+    SB.clearCache();
+    preloadAll();
+  },
+};
 
 /* ====================================================================== */
 /* Boot                                                                   */
 /* ====================================================================== */
 document.addEventListener("DOMContentLoaded", () => {
-  // Periodos default
-  const dp = defaultPeriods();
-  state.periodoInicial = localStorage.getItem("sb_pini") || dp.ini;
-  state.periodoFinal   = localStorage.getItem("sb_pfin") || dp.fin;
+  Preloader.init();
+
+  // Periodos default (último año completo confirmado con datos)
+  state.periodoInicial = localStorage.getItem("sb_pini") || "2024-01";
+  state.periodoFinal   = localStorage.getItem("sb_pfin") || "2024-12";
   document.getElementById("periodoInicial").value = state.periodoInicial;
   document.getElementById("periodoFinal").value   = state.periodoFinal;
+  document.getElementById("periodoInicial").addEventListener("change", e => {
+    state.periodoInicial = e.target.value; localStorage.setItem("sb_pini", state.periodoInicial);
+  });
+  document.getElementById("periodoFinal").addEventListener("change",   e => {
+    state.periodoFinal = e.target.value; localStorage.setItem("sb_pfin", state.periodoFinal);
+  });
 
-  document.getElementById("periodoInicial").addEventListener("change", e => { state.periodoInicial = e.target.value; localStorage.setItem("sb_pini", state.periodoInicial); });
-  document.getElementById("periodoFinal").addEventListener("change",   e => { state.periodoFinal   = e.target.value; localStorage.setItem("sb_pfin", state.periodoFinal); });
+  Entities.init();
 
-  // Entidades
-  renderEntitiesPicker();
-
-  // Tabs
   document.getElementById("tabs").addEventListener("click", e => {
     const b = e.target.closest("button[data-tab]");
     if (b) showTab(b.dataset.tab);
   });
 
   document.getElementById("reloadBtn").addEventListener("click", () => {
-    SB.clearCache(); loadedPanes.clear();
-    const active = document.querySelector('nav.tabs button.active').dataset.tab;
-    runLoader(active);
+    SB.clearCache();
+    preloadAll();
   });
-  document.getElementById("clearCacheBtn").addEventListener("click", () => { SB.clearCache(); setStatus("cache vacío"); });
 
-  // Carga inicial
-  showTab("resumen");
+  preloadAll();
 });
 </script>
 </body>
