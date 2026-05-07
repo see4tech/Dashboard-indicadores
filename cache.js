@@ -11,7 +11,7 @@
     _mode: null,
     get: null,  // assigned below
     preload: async function () { throw new Error("not implemented"); },
-    invalidateAll: async function () { throw new Error("not implemented"); },
+    invalidateAll: null,  // assigned below
     on: null,  // assigned below
     policyFor: null,  // assigned below
     buildPreloadJobs: function () { throw new Error("not implemented"); },
@@ -224,6 +224,11 @@
       r.onsuccess = () => resolve();
       r.onerror = () => reject(r.error);
     });
+  };
+
+  SBCache.invalidateAll = async function () {
+    _l1.clear();
+    await SBCache._idbClear();
   };
 
   SBCache._closeForTests = function () {
