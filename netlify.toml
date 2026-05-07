@@ -1,0 +1,19 @@
+[build]
+  publish = "."
+  functions = "netlify/functions"
+
+# /api/* → función serverless que proxea al API de SB
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/sb-api/:splat"
+  status = 200
+  force = true
+
+# SPA fallback: cualquier otra ruta sirve index.html (por si añadimos rutas)
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[functions]
+  node_bundler = "esbuild"

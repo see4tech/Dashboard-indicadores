@@ -1,0 +1,17 @@
+# Salida del script de prueba (contiene datos reales)
+sb_api_schema.json
+muestras_api/
+
+# Netlify
+.netlify/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Editores
+.vscode/
+.idea/
+.DS_Store
