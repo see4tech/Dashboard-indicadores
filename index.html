@@ -482,7 +482,6 @@ function prevMonth(ym) {
 /* ====================================================================== */
 const SB = {
   base: "/api",
-  cache: new Map(),
   async get(path, params = {}) {
     const qs = new URLSearchParams();
     for (const [k, v] of Object.entries(params)) {
@@ -491,21 +490,9 @@ const SB = {
       else qs.append(k, v);
     }
     const url = `${this.base}${path}?${qs.toString()}`;
-    if (this.cache.has(url)) return this.cache.get(url);
-    const r = await fetch(url, { headers: { "Accept": "application/json" } });
-    if (r.status === 204) { this.cache.set(url, []); return []; }
-    const body = await r.json().catch(() => null);
-    if (!r.ok) {
-      const msg = (body && body.Message) || `HTTP ${r.status}`;
-      throw new Error(msg);
-    }
-    const data = Array.isArray(body) ? body
-                : (body && body.Data) ? body.Data
-                : (body && body.Succeeded === false ? [] : body);
-    this.cache.set(url, data);
-    return data;
+    return SBCache.get(url);
   },
-  clearCache() { this.cache.clear(); },
+  clearCache() { return SBCache.invalidateAll(); },
 };
 
 /* ====================================================================== */
