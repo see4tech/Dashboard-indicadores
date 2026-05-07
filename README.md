@@ -115,6 +115,9 @@ que cambios de filtro sean instantáneos. Detalles en `cache.js`:
 - **Política TTL**: meses ≥4 atrás del actual nunca expiran (SB no los modifica);
   meses 1-3 atrás expiran a las 24h con SWR; mes actual a 6h con SWR;
   endpoints sin `periodoFinal` (ej. `/api/mercados`) a 1h.
+- **Negative caching**: errores 4xx/5xx y fallas de red se cachean 5 min para
+  no martillar al SB cuando está caído o no tiene datos para un mes. Una falla
+  de SWR-refetch sobre data buena previa no la sobrescribe (se mantiene stale).
 - **Preload**: al cargar el dashboard se precachea en background ~47 URLs
   cubriendo los 3 meses más recientes con `tipoEntidad=TODOS` (agregado
   del sistema). El filtrado por entidad específica es client-side, por

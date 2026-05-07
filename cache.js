@@ -75,6 +75,24 @@
     };
   }
 
+  // TTL para errores cacheados (4xx/5xx/network). Suficientemente corto para
+  // recuperar rápido cuando el upstream vuelve, suficientemente largo para
+  // no martillar al SB cuando está caído o no tiene datos para ese mes.
+  const ERROR_TTL_MS = 5 * 60 * 1000;
+
+  function _buildErrorRecord(url, errorMessage, status) {
+    const periodoFinal = SBCache.parsePeriodoFinal(url);
+    const now = SBCache._now();
+    return {
+      url, body: null, status: status || 0,
+      errorMessage,
+      fetchedAt: now,
+      periodoFinal,
+      expiresAt: now + ERROR_TTL_MS,
+      schemaVersion: 1,
+    };
+  }
+
   async function _evictOldest(n) {
     const all = await SBCache._idbGetAll();
     all.sort((a, b) => (a.fetchedAt || 0) - (b.fetchedAt || 0));
@@ -96,7 +114,17 @@
   }
 
   async function _fetchAndPersist(url) {
-    const r = await SBCache._fetch(url, { headers: { "Accept": "application/json" } });
+    let r;
+    try {
+      r = await SBCache._fetch(url, { headers: { "Accept": "application/json" } });
+    } catch (e) {
+      // Network error (fetch threw) → cache short-TTL error
+      const msg = e.message || String(e);
+      const errRec = _buildErrorRecord(url, msg, 0);
+      await _safePut(errRec);
+      _l1.set(url, errRec);
+      throw new Error(msg);
+    }
     if (r.status === 204) {
       const empty = [];
       const rec = _buildRecord(url, empty, 204);
@@ -108,6 +136,9 @@
     try { parsed = await r.json(); } catch { parsed = null; }
     if (!r.ok) {
       const msg = (parsed && parsed.Message) || `HTTP ${r.status}`;
+      const errRec = _buildErrorRecord(url, msg, r.status);
+      await _safePut(errRec);
+      _l1.set(url, errRec);
       throw new Error(msg);
     }
     const body = _normalizeBody(parsed);
@@ -158,17 +189,22 @@
     const now = SBCache._now();
     // L1
     const l1 = _l1.get(url);
-    if (l1 && (l1.expiresAt == null || l1.expiresAt > now)) return l1.body;
+    if (l1 && (l1.expiresAt == null || l1.expiresAt > now)) {
+      if (l1.errorMessage) throw new Error(l1.errorMessage);
+      return l1.body;
+    }
     // L2
     const l2 = await SBCache._idbGet(url);
     if (l2) {
       const fresh = (l2.expiresAt == null || l2.expiresAt > now);
       if (fresh) {
         _l1.set(url, l2);
+        if (l2.errorMessage) throw new Error(l2.errorMessage);
         return l2.body;
       }
+      // Sólo aplicamos SWR a registros buenos (con body), no a errores cacheados
       const policy = SBCache.policyFor(l2.periodoFinal, now);
-      if (policy.swr) {
+      if (policy.swr && !l2.errorMessage) {
         _scheduleRevalidate(url, l2);
         _l1.set(url, l2);
         return l2.body;
