@@ -1296,9 +1296,10 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // Recargar = limpiar cache del SB API + volver a traer todo
-  document.getElementById("reloadBtn").addEventListener("click", () => {
-    SB.clearCache();
-    preloadAll();
+  document.getElementById("reloadBtn").addEventListener("click", async () => {
+    await SB.clearCache();
+    await preloadAll();
+    warmExtraScopes();
   });
 
   // Cambio de métrica en el mapa — re-renderiza sin API call
@@ -1306,8 +1307,71 @@ document.addEventListener("DOMContentLoaded", () => {
     if (e.target.id === "mapMetric") renderMapa();
   });
 
-  preloadAll();
+  wirePillEvents();
+  preloadAll().then(warmExtraScopes);
 });
+
+/* ====================================================================== */
+/* SBCache integration: pill, background warmup, SWR refresh              */
+/* ====================================================================== */
+function warmExtraScopes() {
+  if (typeof SBCache === "undefined" || !state.periodoFinal) return;
+  const jobs = SBCache.buildPreloadJobs({ periodoFinal: state.periodoFinal });
+  SBCache.preload(jobs);
+}
+
+let _swrTimer = null;
+async function silentRefresh() {
+  for (const step of FETCH_PIPELINE) {
+    try { await step.fn(); } catch (e) { console.warn("silentRefresh", step.key, e); }
+  }
+  renderAll();
+  renderMercados();
+}
+
+function wirePillEvents() {
+  if (typeof SBCache === "undefined") return;
+  const pill   = document.getElementById("preloadPill");
+  const text   = document.getElementById("preloadPillText");
+  const close  = document.getElementById("preloadPillClose");
+  if (!pill || !text || !close) return;
+
+  const dismissed = localStorage.getItem("sb_pill_dismissed") === "1";
+
+  close.addEventListener("click", () => {
+    pill.hidden = true;
+    localStorage.setItem("sb_pill_dismissed", "1");
+  });
+
+  SBCache.on("progress", ({ done, total, failed }) => {
+    if (dismissed) return;
+    pill.hidden = false;
+    pill.classList.remove("success", "error");
+    const fail = failed > 0 ? ` (${failed} fallidos)` : "";
+    text.textContent = `Precargando ${done}/${total}${fail}`;
+  });
+  SBCache.on("done", ({ failed }) => {
+    if (dismissed) return;
+    pill.classList.add("success");
+    text.textContent = failed > 0
+      ? `✓ Datos listos (${failed} fallaron)`
+      : `✓ Datos listos`;
+    setTimeout(() => { pill.hidden = true; pill.classList.remove("success"); }, 3000);
+  });
+  SBCache.on("error", (e) => {
+    if (e && e.total_failure) {
+      pill.classList.add("error");
+      text.textContent = "Preload falló — modo lazy";
+      pill.hidden = false;
+    }
+  });
+  // SWR: cuando una URL se refresca con datos nuevos, re-corre el pipeline
+  // silenciosamente para refrescar charts (debounced 2s).
+  SBCache.on("updated", () => {
+    if (_swrTimer) clearTimeout(_swrTimer);
+    _swrTimer = setTimeout(() => { silentRefresh(); }, 2000);
+  });
+}
 </script>
 </body>
 </html>
