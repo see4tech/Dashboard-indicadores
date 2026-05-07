@@ -7,11 +7,14 @@ Dashboard interactivo que consume el [API de Estadísticas del Sistema Financier
 ```
 .
 ├── index.html                 # Dashboard (HTML + Chart.js + Leaflet)
+├── cache.js                   # Cache navegador con IndexedDB + SWR + preload
 ├── netlify.toml               # Configuración de Netlify (redirects + functions)
 ├── netlify/functions/sb-api.js  # Proxy serverless que inyecta la API key
 ├── proxy.py                   # Proxy local para desarrollo (alternativa)
 ├── probar_api_sb.py           # Script para probar todos los endpoints
-└── sb_api_endpoints.md        # Documentación consolidada de los 26 endpoints
+├── sb_api_endpoints.md        # Documentación consolidada de los 26 endpoints
+├── package.json               # devDependencies para tests
+└── tests/                     # node --test + fake-indexeddb
 ```
 
 ## Deploy en Netlify
@@ -101,6 +104,34 @@ El dashboard usa principalmente:
 - **Cambiar paleta:** edita las variables CSS en `:root` al inicio de `index.html`.
 - **Agregar tab:** añade un `<button data-tab="...">` al nav, una `<section data-pane="...">` y un loader en el objeto `LOADERS`.
 - **Cambiar TTL del cache:** ajusta `s-maxage` en `netlify/functions/sb-api.js`.
+
+## Cache local (IndexedDB)
+
+El dashboard cachea las respuestas del API SB en IndexedDB del navegador para
+que cambios de filtro sean instantáneos. Detalles en `cache.js`:
+
+- **L1**: Map en memoria (microsegundos).
+- **L2**: IndexedDB (~10-100ms, persiste entre recargas).
+- **Política TTL**: meses ≥4 atrás del actual nunca expiran (SB no los modifica);
+  meses 1-3 atrás expiran a las 24h con SWR; mes actual a 6h con SWR;
+  endpoints sin `periodoFinal` (ej. `/api/mercados`) a 1h.
+- **Preload**: al cargar el dashboard se precachea, en background, el año en
+  curso para `TODOS` + `BM` + `BAyC` + `AC` + `ARC` (~231 requests con
+  concurrencia 6). Un pill muestra el progreso.
+- **SWR**: si una URL stale trae datos nuevos al refrescarse, se dispara un
+  refresh silencioso del pipeline (debounce 2s) y los charts se redibujan.
+- **Invalidación**: el botón "Recargar datos" vacía el cache y dispara un
+  nuevo preload.
+
+### Tests
+
+```bash
+npm install
+npm test
+```
+
+`fake-indexeddb` se usa solo en tests (devDependency); el build de Netlify
+no lo instala (NODE_ENV=production).
 
 ## Troubleshooting
 
