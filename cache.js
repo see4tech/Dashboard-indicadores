@@ -12,8 +12,26 @@
     preload: async function () { throw new Error("not implemented"); },
     invalidateAll: async function () { throw new Error("not implemented"); },
     on: function () { throw new Error("not implemented"); },
-    policyFor: function () { throw new Error("not implemented"); },
+    policyFor: null,  // assigned below
     buildPreloadJobs: function () { throw new Error("not implemented"); },
+  };
+
+  function monthDelta(periodoFinal, now) {
+    const [y, m] = periodoFinal.split("-").map(Number);
+    const d = new Date(now);
+    const refY = d.getUTCFullYear();
+    const refM = d.getUTCMonth() + 1;
+    return (refY - y) * 12 + (refM - m);
+  }
+
+  SBCache.policyFor = function (periodoFinal, now) {
+    const HOUR = 3600 * 1000;
+    const DAY  = 24 * HOUR;
+    if (!periodoFinal) return { ttlMs: HOUR, swr: true };
+    const delta = monthDelta(periodoFinal, now);
+    if (delta >= 4) return { ttlMs: null,    swr: false };
+    if (delta >= 1) return { ttlMs: DAY,     swr: true  };
+    return                 { ttlMs: 6*HOUR, swr: true  };
   };
 
   global.SBCache = SBCache;
