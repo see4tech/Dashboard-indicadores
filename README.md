@@ -116,10 +116,10 @@ que cambios de filtro sean instantáneos. Detalles en `cache.js`:
   meses 1-3 atrás expiran a las 24h con SWR; mes actual a 6h con SWR;
   endpoints sin `periodoFinal` (ej. `/api/mercados`) a 1h.
 - **Preload**: al cargar el dashboard se precachea en background ~47 URLs
-  cubriendo los 3 meses más recientes para `tipoEntidad=TODOS` (que es lo
-  que el dashboard pide siempre — el filtrado por entidad es client-side).
-  Concurrencia 2 para no saturar el upstream del SB. Un pill muestra el
-  progreso.
+  cubriendo los 3 meses más recientes con los 4 códigos de `tipoEntidad`
+  (`BM`+`BAyC`+`AC`+`ARC`) — el agregado del sistema. El filtrado por
+  entidad específica es client-side, por eso el preload usa siempre el
+  scope agregado. Concurrencia 2 para no saturar el upstream del SB.
 - **SWR**: si una URL stale trae datos nuevos al refrescarse, se dispara un
   refresh silencioso del pipeline (debounce 2s) y los charts se redibujan.
 - **Invalidación**: el botón "Recargar datos" vacía el cache y dispara un
@@ -141,5 +141,5 @@ no lo instala (NODE_ENV=production).
 |---|---|---|
 | `SB_API_KEY no está configurada` | Variable no fue agregada o no hubo redeploy | Site settings → Env vars → Trigger deploy |
 | 403 Sucuri | Bloqueo del WAF (raro, los headers ya lo evitan) | Esperar y reintentar; revisar logs de la función |
-| 400 "Se debe introducir entidad…" | Endpoint requiere filtro de entidad | El dashboard manda `tipoEntidad=TODOS` por defecto — revisar parámetros del filtro |
+| 400 "Se debe introducir entidad…" | Endpoint requiere filtro de entidad | El dashboard manda los 4 códigos `tipoEntidad=BM&BAyC&AC&ARC` por defecto (agregado de todo el sistema) |
 | Gráfico vacío | El periodo seleccionado no tiene datos | Probar con un mes anterior (la SB publica con ~3-4 meses de lag) |
