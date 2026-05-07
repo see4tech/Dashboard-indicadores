@@ -17,29 +17,23 @@ test("buildPreloadJobs: incluye /api/mercados sin params", () => {
   assert.ok(jobs.some(j => j.url === "/api/mercados"));
 });
 
-test("buildPreloadJobs: range query con periodoInicial=YYYY-01 y los 4 tipoEntidad", () => {
+test("buildPreloadJobs: range query con periodoInicial=YYYY-01 y TODOS", () => {
   const jobs = SBCache.buildPreloadJobs({ periodoFinal: "2026-05" });
   const range = jobs.filter(j => j.url.startsWith("/api/indicadores/principales"));
   assert.equal(range.length, 1);
   assert.match(range[0].url, /periodoInicial=2026-01/);
   assert.match(range[0].url, /periodoFinal=2026-05/);
-  for (const code of ["BM", "BAyC", "AC", "ARC"]) {
-    assert.ok(range[0].url.includes(`tipoEntidad=${encodeURIComponent(code)}`),
-      `expected tipoEntidad=${code} in URL: ${range[0].url}`);
-  }
+  assert.match(range[0].url, /tipoEntidad=TODOS/);
 });
 
-test("buildPreloadJobs: probing usa 3 meses con los 4 tipoEntidad", () => {
+test("buildPreloadJobs: probing usa 3 meses con TODOS", () => {
   const jobs = SBCache.buildPreloadJobs({ periodoFinal: "2026-05" });
   const tipo = jobs.filter(j => j.url.startsWith("/api/carteras/creditos/tipo"));
   assert.equal(tipo.length, 3);
   const months = new Set();
   for (const j of tipo) {
     months.add(j.url.match(/periodoFinal=([^&]+)/)[1]);
-    for (const code of ["BM", "BAyC", "AC", "ARC"]) {
-      assert.ok(j.url.includes(`tipoEntidad=${encodeURIComponent(code)}`),
-        `expected tipoEntidad=${code} in URL: ${j.url}`);
-    }
+    assert.match(j.url, /tipoEntidad=TODOS/);
   }
   assert.equal(months.size, 3);
 });

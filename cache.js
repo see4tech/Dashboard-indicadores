@@ -265,11 +265,10 @@
     "Total Patrimonio Neto",
   ];
 
-  // El dashboard pide siempre el agregado del sistema pasando los 4 códigos
-  // de tipoEntidad (BM/BAyC/AC/ARC). Las URLs precacheadas deben matchear
-  // ese formato exacto para servir cache hits a las llamadas reales.
+  // El dashboard pide siempre el agregado del sistema con tipoEntidad=TODOS.
+  // Las URLs precacheadas deben matchear ese formato exacto.
   const PRELOAD_SCOPES = [
-    { tipoEntidad: ["BM", "BAyC", "AC", "ARC"] },
+    { tipoEntidad: "TODOS" },
   ];
 
   function _prevMonth(ym) {
