@@ -24,6 +24,13 @@
     return (refY - y) * 12 + (refM - m);
   }
 
+  SBCache.parsePeriodoFinal = function (url) {
+    const qIdx = url.indexOf("?");
+    if (qIdx < 0) return null;
+    const params = new URLSearchParams(url.slice(qIdx + 1));
+    return params.get("periodoFinal");
+  };
+
   SBCache.policyFor = function (periodoFinal, now) {
     const HOUR = 3600 * 1000;
     const DAY  = 24 * HOUR;
