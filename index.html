@@ -177,8 +177,8 @@
   .progress-bar > span { display:block; height:100%; background: linear-gradient(90deg, var(--primary), var(--violet));
     border-radius: 99px; transition: width .3s ease; width: 0%; }
   .progress-row { display:flex; justify-content: space-between; font-size: 12px; color: var(--muted); }
-  .step-list { margin: 14px 0 0; padding: 0; list-style: none; font-size: 12px; max-height: 200px; overflow-y: auto; }
-  .step-list li { display: flex; align-items: center; padding: 4px 0; color: var(--muted); }
+  .step-list { margin: 14px 0 0; padding: 0; list-style: none; font-size: 12px; }
+  .step-list li { display: flex; align-items: center; padding: 5px 0; color: var(--muted); line-height: 1.3; }
   .step-list li.done { color: var(--green); }
   .step-list li.error { color: var(--red); }
   .step-list li.active { color: var(--text); font-weight: 500; }
@@ -762,20 +762,17 @@ async function fetchCaptaciones() {
 }
 
 async function fetchComparativa() {
-  const indicadores = [
-    "ROA (Rentabilidad de los Activos)",
-    "Indice de Solvencia",
-    "Cartera de Créditos Vencida (Capital y Rendimientos) / Total de Cartera de Crédito Bruta",
-    "Total Patrimonio Neto",
-  ];
+  // Sin filtro `indicador=`: SB devolvía 404 "No se ha encontrado resultados"
+  // si cualquier nombre del filtro no existía en /indicadores/financieros
+  // (varios de los nombres viejos viven en otros endpoints). Traemos todos
+  // los indicadores y renderComparativa filtra por nombre client-side.
   let data = [];
   let period = state.periodoFinal;
-  for (let i = 0; i < 18 && !data.length; i++) {
+  for (let i = 0; i < 6 && !data.length; i++) {
     data = await safeGet("/indicadores/financieros", {
       periodoInicial: period, periodoFinal: period,
       paginas: 1, registros: 5000,
       tipoEntidad: "TODOS",
-      indicador: indicadores,
     });
     if (!data.length) period = prevMonth(period);
   }

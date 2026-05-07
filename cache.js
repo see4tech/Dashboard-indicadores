@@ -294,13 +294,6 @@
     "/reclamaciones/eif",
   ];
 
-  const COMPARATIVA_INDICATORS = [
-    "ROA (Rentabilidad de los Activos)",
-    "Indice de Solvencia",
-    "Cartera de Créditos Vencida (Capital y Rendimientos) / Total de Cartera de Crédito Bruta",
-    "Total Patrimonio Neto",
-  ];
-
   // El dashboard pide siempre el agregado del sistema con tipoEntidad=TODOS.
   // Las URLs precacheadas deben matchear ese formato exacto.
   const PRELOAD_SCOPES = [
@@ -351,12 +344,13 @@
       }
     }
 
+    // /indicadores/financieros sin filtro `indicador` (mismo formato que
+    // fetchComparativa actual)
     for (const scope of PRELOAD_SCOPES) {
       for (const m of months) {
         jobs.push({ url: _buildUrl("/indicadores/financieros", {
           periodoInicial: m, periodoFinal: m,
           paginas: 1, registros: 5000,
-          indicador: COMPARATIVA_INDICATORS,
           ...scope,
         })});
       }
