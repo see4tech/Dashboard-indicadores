@@ -45,3 +45,47 @@ test("get: error HTTP no-2xx → throws con mensaje", async () => {
   }));
   await assert.rejects(() => SBCache.get(URL_FRESH), /boom/);
 });
+
+test("get: stale + SWR → devuelve stale + refetch + emite 'updated' si body cambia", async () => {
+  SBCache._now = () => 100_000_000;
+  const url = "/api/x?periodoFinal=2026-05";
+  await SBCache._idbPut({
+    url, body: [{ old: true }], status: 200,
+    fetchedAt: 100_000_000 - 7 * 3600 * 1000,
+    periodoFinal: "2026-05",
+    expiresAt: 100_000_000 - 1 * 3600 * 1000,
+    schemaVersion: 1,
+  });
+  setFetchMock(async () => jsonResponse([{ old: false, fresh: true }]));
+  const updates = [];
+  const off = SBCache.on("updated", (e) => updates.push(e));
+  const r = await SBCache.get(url);
+  assert.deepEqual(r, [{ old: true }]);
+  await new Promise(setImmediate);
+  await new Promise(setImmediate);
+  await new Promise(setImmediate);
+  assert.equal(updates.length, 1);
+  assert.equal(updates[0].url, url);
+  off();
+});
+
+test("get: stale + SWR + body idéntico → NO emite 'updated'", async () => {
+  SBCache._now = () => 100_000_000;
+  const url = "/api/y?periodoFinal=2026-05";
+  await SBCache._idbPut({
+    url, body: [{ same: true }], status: 200,
+    fetchedAt: 100_000_000 - 10 * 3600 * 1000,
+    periodoFinal: "2026-05",
+    expiresAt: 100_000_000 - 1 * 3600 * 1000,
+    schemaVersion: 1,
+  });
+  setFetchMock(async () => jsonResponse([{ same: true }]));
+  const updates = [];
+  const off = SBCache.on("updated", (e) => updates.push(e));
+  await SBCache.get(url);
+  await new Promise(setImmediate);
+  await new Promise(setImmediate);
+  await new Promise(setImmediate);
+  assert.equal(updates.length, 0);
+  off();
+});

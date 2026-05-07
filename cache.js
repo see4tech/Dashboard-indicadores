@@ -101,8 +101,41 @@
     return body;
   }
 
-  function _scheduleRevalidate(/* url, prev */) {
-    // Implementado en Task 9
+  function _bodyEqual(a, b) {
+    try { return JSON.stringify(a) === JSON.stringify(b); }
+    catch { return false; }
+  }
+
+  function _scheduleRevalidate(url, prev) {
+    if (_inflight.has(url)) return;
+    const p = (async () => {
+      try {
+        const r = await SBCache._fetch(url, { headers: { "Accept": "application/json" } });
+        if (r.status === 204) {
+          const empty = [];
+          const rec = _buildRecord(url, empty, 204);
+          await _safePut(rec);
+          _l1.set(url, rec);
+          if (!_bodyEqual(prev.body, empty)) SBCache._emit("updated", { url });
+          return;
+        }
+        const parsed = await r.json().catch(() => null);
+        if (!r.ok) {
+          SBCache._emit("error", { url, message: `HTTP ${r.status}` });
+          return;
+        }
+        const body = _normalizeBody(parsed);
+        const rec = _buildRecord(url, body, r.status);
+        await _safePut(rec);
+        _l1.set(url, rec);
+        if (!_bodyEqual(prev.body, body)) SBCache._emit("updated", { url });
+      } catch (e) {
+        SBCache._emit("error", { url, message: e.message || String(e) });
+      } finally {
+        _inflight.delete(url);
+      }
+    })();
+    _inflight.set(url, p);
   }
 
   SBCache.get = async function (url) {
