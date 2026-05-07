@@ -69,6 +69,58 @@ test("get: stale + SWR → devuelve stale + refetch + emite 'updated' si body ca
   off();
 });
 
+test("get: 2 calls concurrentes para misma URL → 1 fetch", async () => {
+  let calls = 0;
+  setFetchMock(async () => {
+    calls++;
+    await new Promise(r => setTimeout(r, 5));
+    return jsonResponse([{ v: calls }]);
+  });
+  const url = "/api/dedup?periodoFinal=2026-05";
+  const [a, b] = await Promise.all([SBCache.get(url), SBCache.get(url)]);
+  assert.equal(calls, 1);
+  assert.deepEqual(a, b);
+});
+
+test("get: fetch falla con stale en IDB → devuelve stale + 'error'", async () => {
+  SBCache._now = () => 100_000_000;
+  const url = "/api/err?periodoFinal=2026-05";
+  await SBCache._idbPut({
+    url, body: [{ stale: true }], status: 200,
+    fetchedAt: 100_000_000 - 10 * 3600 * 1000,
+    periodoFinal: "2026-05",
+    expiresAt: 100_000_000 - 1 * 3600 * 1000,
+    schemaVersion: 1,
+  });
+  setFetchMock(async () => { throw new Error("network down"); });
+  const errors = [];
+  const off = SBCache.on("error", (e) => errors.push(e));
+  const r = await SBCache.get(url);
+  assert.deepEqual(r, [{ stale: true }]);
+  await new Promise(setImmediate);
+  await new Promise(setImmediate);
+  await new Promise(setImmediate);
+  assert.equal(errors.length, 1);
+  assert.match(errors[0].message, /network/);
+  off();
+});
+
+test("get: fetch falla SIN stale → throws", async () => {
+  setFetchMock(async () => { throw new Error("offline"); });
+  await assert.rejects(
+    () => SBCache.get("/api/nostale?periodoFinal=2026-05"),
+    /offline/
+  );
+});
+
+test("get: bypass /api/ → llamada directa, sin IDB", async () => {
+  setFetchMock(async () => jsonResponse([{ ext: true }]));
+  const r = await SBCache.get("/external/thing");
+  assert.deepEqual(r, [{ ext: true }]);
+  const all = await SBCache._idbGetAll();
+  assert.equal(all.length, 0);
+});
+
 test("get: stale + SWR + body idéntico → NO emite 'updated'", async () => {
   SBCache._now = () => 100_000_000;
   const url = "/api/y?periodoFinal=2026-05";

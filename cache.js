@@ -32,6 +32,7 @@
   let _db = null;
   const _l1 = new Map();
   const _inflight = new Map();
+  const _revalidating = new Set();
 
   SBCache.init = async function () {
     if (SBCache._mode) return;
@@ -107,8 +108,9 @@
   }
 
   function _scheduleRevalidate(url, prev) {
-    if (_inflight.has(url)) return;
-    const p = (async () => {
+    if (_revalidating.has(url)) return;
+    _revalidating.add(url);
+    (async () => {
       try {
         const r = await SBCache._fetch(url, { headers: { "Accept": "application/json" } });
         if (r.status === 204) {
@@ -132,26 +134,16 @@
       } catch (e) {
         SBCache._emit("error", { url, message: e.message || String(e) });
       } finally {
-        _inflight.delete(url);
+        _revalidating.delete(url);
       }
     })();
-    _inflight.set(url, p);
   }
 
-  SBCache.get = async function (url) {
-    if (!SBCache._mode) await SBCache.init();
-    // Bypass para URLs no /api/
-    if (!url.startsWith("/api/")) {
-      const r = await SBCache._fetch(url);
-      if (r.status === 204) return [];
-      return _normalizeBody(await r.json());
-    }
+  async function _getOrFetch(url) {
     const now = SBCache._now();
     // L1
     const l1 = _l1.get(url);
     if (l1 && (l1.expiresAt == null || l1.expiresAt > now)) return l1.body;
-    // dedup
-    if (_inflight.has(url)) return _inflight.get(url);
     // L2
     const l2 = await SBCache._idbGet(url);
     if (l2) {
@@ -167,8 +159,20 @@
         return l2.body;
       }
     }
-    // Fetch
-    const p = _fetchAndPersist(url).finally(() => _inflight.delete(url));
+    return _fetchAndPersist(url);
+  }
+
+  SBCache.get = async function (url) {
+    if (!SBCache._mode) await SBCache.init();
+    // Bypass para URLs no /api/
+    if (!url.startsWith("/api/")) {
+      const r = await SBCache._fetch(url);
+      if (r.status === 204) return [];
+      return _normalizeBody(await r.json());
+    }
+    // dedup: cualquier llamada concurrente comparte la misma promesa
+    if (_inflight.has(url)) return _inflight.get(url);
+    const p = _getOrFetch(url).finally(() => _inflight.delete(url));
     _inflight.set(url, p);
     return p;
   };
@@ -226,6 +230,7 @@
     if (_db) { try { _db.close(); } catch (e) {} _db = null; }
     _l1.clear();
     _inflight.clear();
+    _revalidating.clear();
     SBCache._mode = null;
   };
 
