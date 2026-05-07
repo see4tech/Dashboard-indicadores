@@ -265,8 +265,9 @@
     "Total Patrimonio Neto",
   ];
 
+  // TODOS (scope sin filtro) lo cubre preloadAll() naturalmente; aquí solo
+  // añadimos las 4 vistas por tipoEntidad que el UI ofrece como switch rápido.
   const PRELOAD_SCOPES = [
-    {},
     { tipoEntidad: ["BM"]   },
     { tipoEntidad: ["BAyC"] },
     { tipoEntidad: ["AC"]   },
@@ -333,7 +334,7 @@
     return jobs;
   };
 
-  const PRELOAD_CONCURRENCY = 6;
+  const PRELOAD_CONCURRENCY = 2;
 
   SBCache.preload = async function (jobs) {
     const total = jobs.length;

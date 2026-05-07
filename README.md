@@ -116,8 +116,10 @@ que cambios de filtro sean instantáneos. Detalles en `cache.js`:
   meses 1-3 atrás expiran a las 24h con SWR; mes actual a 6h con SWR;
   endpoints sin `periodoFinal` (ej. `/api/mercados`) a 1h.
 - **Preload**: al cargar el dashboard se precachea, en background, el año en
-  curso para `TODOS` + `BM` + `BAyC` + `AC` + `ARC` (~231 requests con
-  concurrencia 6). Un pill muestra el progreso.
+  curso para los 4 `tipoEntidad` (`BM` + `BAyC` + `AC` + `ARC`) — ~185
+  requests con concurrencia 2 para no saturar el upstream del SB. El scope
+  `TODOS` lo cubre `preloadAll()` con sus llamadas naturales. Un pill muestra
+  el progreso.
 - **SWR**: si una URL stale trae datos nuevos al refrescarse, se dispara un
   refresh silencioso del pipeline (debounce 2s) y los charts se redibujan.
 - **Invalidación**: el botón "Recargar datos" vacía el cache y dispara un
