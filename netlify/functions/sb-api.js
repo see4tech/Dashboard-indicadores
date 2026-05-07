@@ -35,17 +35,22 @@ exports.handler = async (event) => {
     return { statusCode: 204, headers: CORS_HEADERS, body: "" };
   }
 
-  const apiKey = process.env.SB_API_KEY;
-  if (!apiKey) {
-    return jsonError(500, "SB_API_KEY no está configurada en Netlify (Site settings → Environment variables).");
-  }
-
   // event.path puede llegar como /.netlify/functions/sb-api/captaciones/localidad
   // o como /api/captaciones/localidad — manejamos ambos.
   let path = event.path || "";
   path = path.replace(/^\/\.netlify\/functions\/sb-api/, "");
   path = path.replace(/^\/api/, "");
   if (!path.startsWith("/")) path = "/" + path;
+
+  // Endpoint especial: GeoJSON de provincias de RD (cacheado en CDN)
+  if (path === "/geo/provincias") {
+    return fetchGeoJSON();
+  }
+
+  const apiKey = process.env.SB_API_KEY;
+  if (!apiKey) {
+    return jsonError(500, "SB_API_KEY no está configurada en Netlify (Site settings → Environment variables).");
+  }
 
   // Reconstruir querystring respetando parámetros multi-valor (ej. entidad=A&entidad=B)
   const qs = new URLSearchParams();
@@ -92,4 +97,34 @@ function jsonError(status, message) {
     headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
     body: JSON.stringify({ Succeeded: false, Message: message, Errors: null, Data: null }),
   };
+}
+
+// GeoJSON de provincias — varios mirrors, devolvemos el primero que responda.
+async function fetchGeoJSON() {
+  const sources = [
+    "https://raw.githubusercontent.com/codeforgermany/click_that_hood/master/public/data/dominican-republic.geojson",
+    "https://raw.githubusercontent.com/glynnbird/usstatesgeojson/master/dominican-republic.geojson",
+    "https://gist.githubusercontent.com/AshKyd/5453c1b4af19fcb9d9e0/raw/dominican-republic.geojson",
+  ];
+  for (const url of sources) {
+    try {
+      const r = await fetch(url, { headers: { "User-Agent": "netlify-fn" } });
+      if (!r.ok) continue;
+      const body = await r.text();
+      // Validar que sea JSON válido y tipo FeatureCollection
+      const j = JSON.parse(body);
+      if (j && j.type === "FeatureCollection" && Array.isArray(j.features)) {
+        return {
+          statusCode: 200,
+          headers: {
+            ...CORS_HEADERS,
+            "Content-Type": "application/geo+json",
+            "Cache-Control": "public, max-age=86400, s-maxage=604800", // 7 días en CDN
+          },
+          body,
+        };
+      }
+    } catch { /* probar siguiente */ }
+  }
+  return jsonError(502, "No se pudo obtener GeoJSON de provincias de ninguno de los mirrors.");
 }

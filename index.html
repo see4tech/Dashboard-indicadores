@@ -406,13 +406,9 @@ function makeChart(id, cfg) {
   return state.charts[id];
 }
 
-/* Defaults: últimos 12 meses con lag de 4 meses (la SB publica con retraso) */
+/* Defaults: últimos 12 meses sobre 2024 (último año completo con datos en SB) */
 function defaultPeriods() {
-  const now = new Date();
-  const fin = new Date(now.getFullYear(), now.getMonth()-4, 1);
-  const ini = new Date(fin.getFullYear()-1, fin.getMonth(), 1);
-  const fmt = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;
-  return { ini: fmt(ini), fin: fmt(fin) };
+  return { ini: "2024-01", fin: "2024-12" };
 }
 
 function renderEntitiesPicker() {
@@ -449,13 +445,27 @@ function updateSummaryEntities() {
     n === 0 ? "Entidades: TODOS" : `Entidades: ${n} seleccionadas`;
 }
 
-/* Helper: parámetros base para cualquier endpoint */
+/* Helper: parámetros base para queries que cubren todo el rango */
 function baseParams(extra={}) {
   const p = {
     periodoInicial: state.periodoInicial,
     periodoFinal: state.periodoFinal,
     paginas: 1,
-    registros: 5000,
+    registros: 1000,
+  };
+  if (state.selectedEntities.size > 0) p.entidad = [...state.selectedEntities];
+  else p.tipoEntidad = "TODOS";
+  return Object.assign(p, extra);
+}
+
+/* Helper: parámetros para queries de "snapshot" (sólo el último mes del rango).
+   Reduce dramáticamente el payload — usado por cartera, captaciones, comparativa y mapa. */
+function latestParams(extra={}) {
+  const p = {
+    periodoInicial: state.periodoFinal,   // sólo un mes
+    periodoFinal:   state.periodoFinal,
+    paginas: 1,
+    registros: 1000,
   };
   if (state.selectedEntities.size > 0) p.entidad = [...state.selectedEntities];
   else p.tipoEntidad = "TODOS";
@@ -549,7 +559,7 @@ async function loadResumen() {
 
   // 2) Morosidad estresada (último periodo del rango)
   try {
-    const me = await SB.get("/indicadores/morosidad-estresada", baseParams());
+    const me = await SB.get("/indicadores/morosidad-estresada", latestParams());
     const last = (me || []).slice().sort((a,b)=>a.periodo.localeCompare(b.periodo)).pop();
     if (last) {
       const fields = ["vencido","cobranza","tc31a60","reestructuradoRea","reestructuradoTemporal","castigos","adjudicado"];
@@ -571,28 +581,29 @@ async function loadResumen() {
 /* CARTERA                                                                */
 /* ====================================================================== */
 async function loadCartera() {
+  const p = latestParams();
   // Por tipo
-  const tipo = await SB.get("/carteras/creditos/tipo", baseParams());
+  const tipo = await SB.get("/carteras/creditos/tipo", p);
   aggDonut("chartCarteraTipo", tipo, "tipoCartera", "deuda");
 
   // Por sector económico (top 12)
-  const sec = await SB.get("/carteras/creditos/sectores-economicos", baseParams());
+  const sec = await SB.get("/carteras/creditos/sectores-economicos", p);
   aggBarTop("chartCarteraSector", sec, "sectorEconomico", "deuda", 12);
 
   // Por moneda
-  const mon = await SB.get("/carteras/creditos/moneda", baseParams());
+  const mon = await SB.get("/carteras/creditos/moneda", p);
   aggDonut("chartCarteraMoneda", mon, "tipoMoneda", "deuda");
 
   // Por género
-  const gen = await SB.get("/carteras/creditos/genero", baseParams());
+  const gen = await SB.get("/carteras/creditos/genero", p);
   aggDonut("chartCarteraGenero", gen, "genero", "deuda");
 
   // Riesgo
-  const rgo = await SB.get("/carteras/creditos/clasificacion-riesgo", baseParams());
+  const rgo = await SB.get("/carteras/creditos/clasificacion-riesgo", p);
   aggBarTop("chartCarteraRiesgo", rgo, "clasificacionRiesgo", "deuda", 10);
 
   // Tipo facilidad
-  const fac = await SB.get("/carteras/creditos/facilidad", baseParams());
+  const fac = await SB.get("/carteras/creditos/facilidad", p);
   aggBarTop("chartCarteraFacilidad", fac, "facilidad", "deuda", 12);
 }
 
@@ -600,12 +611,10 @@ async function loadCartera() {
 /* CAPTACIONES                                                            */
 /* ====================================================================== */
 async function loadCaptaciones() {
-  if (state.selectedEntities.size === 0) {
-    setStatus("Selecciona al menos una entidad para captaciones", true);
-  }
-  const mon = await SB.get("/captaciones/moneda", baseParams());
+  const p = latestParams();
+  const mon = await SB.get("/captaciones/moneda", p);
   aggBarTop("chartCaptMoneda", mon, "instrumentoCaptacion", "balance", 14);
-  const sec = await SB.get("/captaciones/sector-depositante", baseParams());
+  const sec = await SB.get("/captaciones/sector-depositante", p);
   // agregar por publicoPrivado-financiero combinación
   const buckets = {};
   for (const r of (sec || [])) {
@@ -628,8 +637,8 @@ async function loadComparativa() {
                        "Indice de Solvencia",
                        "Cartera de Créditos Vencida (Capital y Rendimientos) / Total de Cartera de Crédito Bruta",
                        "Total Patrimonio Neto"];
-  // Pedimos los 4 indicadores en una sola llamada al endpoint
-  const data = await SB.get("/indicadores/financieros", baseParams({ indicador: indicadores }));
+  // Pedimos los 4 indicadores en una sola llamada al endpoint, sólo último mes
+  const data = await SB.get("/indicadores/financieros", latestParams({ indicador: indicadores }));
   // Filtrar al último periodo y agrupar por entidad
   const byPeriod = (data||[]).reduce((m,r)=>{m[r.periodo]=true;return m;}, {});
   const lastPeriod = Object.keys(byPeriod).sort().pop();
@@ -661,7 +670,7 @@ function rankBar(id, rows, label, color) {
 /* ====================================================================== */
 let mapInstance = null;
 let mapLayer = null;
-const PROVS_GEOJSON_URL = "https://raw.githubusercontent.com/codeforgermany/click_that_hood/main/public/data/dominican-republic.geojson";
+const PROVS_GEOJSON_URL = "/api/geo/provincias";
 async function loadMapa() {
   if (!mapInstance) {
     mapInstance = L.map('map', { zoomControl: true, attributionControl: false }).setView([18.7, -70.2], 8);
@@ -670,10 +679,10 @@ async function loadMapa() {
   const metric = document.getElementById("mapMetric").value;
   let rows = [];
   if (metric === "cartera") {
-    const data = await SB.get("/carteras/creditos/localidad", baseParams());
+    const data = await SB.get("/carteras/creditos/localidad", latestParams());
     rows = (data||[]).map(r => ({ provincia: r.provincia, valor: r.deuda }));
   } else {
-    const data = await SB.get("/captaciones/localidad", baseParams());
+    const data = await SB.get("/captaciones/localidad", latestParams());
     rows = (data||[]).map(r => ({ provincia: r.provincia, valor: r.balance }));
   }
   // sumar por provincia
@@ -721,7 +730,12 @@ document.addEventListener("change", e => {
 /* ESTADOS FINANCIEROS                                                    */
 /* ====================================================================== */
 async function loadEstados() {
-  const sit = await SB.get("/estados/situacion/eif", baseParams());
+  // El balance trend usa el rango completo, pero si TODOS hace timeout
+  // limitamos a la EIF tipo BM (bancos múltiples) que es lo más representativo.
+  const trendParams = (state.selectedEntities.size > 0)
+    ? baseParams()
+    : baseParams({ tipoEntidad: "BM" });
+  const sit = await SB.get("/estados/situacion/eif", trendParams);
   // Agregar por periodo y conceptoNivel1 (Activos / Pasivos / Patrimonio)
   const periods = [...new Set((sit||[]).map(r=>r.periodo))].sort();
   const groups = ["Activos","Pasivos","Patrimonio"];
@@ -735,7 +749,7 @@ async function loadEstados() {
   });
 
   // Estado de resultados último periodo — tabla simple top conceptoNivel2
-  const res = await SB.get("/estados/resultados/eif", baseParams());
+  const res = await SB.get("/estados/resultados/eif", latestParams());
   const lastP = [...new Set((res||[]).map(r=>r.periodo))].sort().pop();
   const filtered = (res||[]).filter(r => r.periodo === lastP);
   const byN2 = {};
@@ -755,7 +769,7 @@ async function loadEstados() {
 /* RECLAMACIONES                                                          */
 /* ====================================================================== */
 async function loadReclamaciones() {
-  const eif = await SB.get("/reclamaciones/eif", baseParams());
+  const eif = await SB.get("/reclamaciones/eif", latestParams());
   const lastP = [...new Set((eif||[]).map(r=>r.periodo))].sort().pop();
   const recent = (eif||[]).filter(r => r.periodo === lastP);
   const byProd = {};
