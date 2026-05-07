@@ -11,7 +11,7 @@
     get: async function () { throw new Error("not implemented"); },
     preload: async function () { throw new Error("not implemented"); },
     invalidateAll: async function () { throw new Error("not implemented"); },
-    on: function () { throw new Error("not implemented"); },
+    on: null,  // assigned below
     policyFor: null,  // assigned below
     buildPreloadJobs: function () { throw new Error("not implemented"); },
   };
@@ -23,6 +23,22 @@
     const refM = d.getUTCMonth() + 1;
     return (refY - y) * 12 + (refM - m);
   }
+
+  const _listeners = new Map();
+
+  SBCache.on = function (event, handler) {
+    if (!_listeners.has(event)) _listeners.set(event, new Set());
+    _listeners.get(event).add(handler);
+    return function off() { _listeners.get(event)?.delete(handler); };
+  };
+
+  SBCache._emit = function (event, payload) {
+    const set = _listeners.get(event);
+    if (!set) return;
+    for (const h of set) {
+      try { h(payload); } catch (e) { /* swallow */ }
+    }
+  };
 
   SBCache.parsePeriodoFinal = function (url) {
     const qIdx = url.indexOf("?");
