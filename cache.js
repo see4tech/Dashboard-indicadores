@@ -75,9 +75,24 @@
     };
   }
 
+  async function _evictOldest(n) {
+    const all = await SBCache._idbGetAll();
+    all.sort((a, b) => (a.fetchedAt || 0) - (b.fetchedAt || 0));
+    const toDelete = all.slice(0, n);
+    for (const r of toDelete) await SBCache._idbDelete(r.url);
+  }
+
   async function _safePut(rec) {
-    try { await SBCache._idbPut(rec); }
-    catch (e) { /* quota se maneja en Task 13 (eviction) */ }
+    try {
+      await SBCache._idbPut(rec);
+    } catch (e) {
+      if (e && (e.name === "QuotaExceededError" || /quota/i.test(e.message || ""))) {
+        try {
+          await _evictOldest(30);
+          await SBCache._idbPut(rec);
+        } catch (e2) { /* degrada a L1 only */ }
+      }
+    }
   }
 
   async function _fetchAndPersist(url) {
