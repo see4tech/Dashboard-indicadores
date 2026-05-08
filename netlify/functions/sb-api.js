@@ -412,26 +412,12 @@ async function fetchBTC() {
  * MICM publica precios cada semana — intentamos su API y luego la web.
  */
 async function fetchFuelPrices() {
-  // Intento con endpoints JSON conocidos/especulativos del MICM
+  // La home page de MICM tiene la sección "Precios de Combustibles" con los
+  // precios actuales. La scrapeamos directo — más confiable que rutas
+  // específicas que cambian.
   for (const url of [
-    "https://micm.gob.do/api/precios-combustibles",
-    "https://micm.gob.do/api/combustibles/precios",
-  ]) {
-    try {
-      const r = await fetchWT(url, {}, 5000);
-      if (r.ok) {
-        const j = await r.json();
-        const prices = normalizeMICMJson(j);
-        if (prices) return { prices, fuente: url };
-      }
-    } catch {}
-  }
-
-  // Fallback: parsear HTML de la página pública (varias rutas conocidas)
-  for (const url of [
-    "https://micm.gob.do/avisos-combustibles",
-    "https://micm.gob.do/combustibles",
-    "https://micm.gob.do/avisos-de-precios-de-combustibles",
+    "https://micm.gob.do/",
+    "https://micm.gob.do/direcciones/combustibles/avisos-semanales-de-precios/avisos-semanales-de-precios-de-combustibles/",
   ]) {
     try {
       const r = await fetchWT(
@@ -442,6 +428,21 @@ async function fetchFuelPrices() {
       if (r.ok) {
         const html = await r.text();
         const prices = parseMICMHtml(html);
+        if (prices) return { prices, fuente: url };
+      }
+    } catch {}
+  }
+
+  // Último intento: endpoints JSON especulativos por si algún día existen
+  for (const url of [
+    "https://micm.gob.do/api/precios-combustibles",
+    "https://micm.gob.do/api/combustibles/precios",
+  ]) {
+    try {
+      const r = await fetchWT(url, {}, 5000);
+      if (r.ok) {
+        const j = await r.json();
+        const prices = normalizeMICMJson(j);
         if (prices) return { prices, fuente: url };
       }
     } catch {}
@@ -469,23 +470,56 @@ function normalizeMICMJson(j) {
 }
 
 function parseMICMHtml(html) {
+  // Stripeamos tags HTML para tener un texto plano searchable
+  const text = html
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/\s+/g, " ");
+
   const out = {};
-  const patterns = [
-    [/gasolina\s+premium[^\d]{0,60}(\d{2,3}[.,]\d{1,2})/i,           "gasolinaPremium"],
-    [/gasolina\s+regular[^\d]{0,60}(\d{2,3}[.,]\d{1,2})/i,           "gasolinaRegular"],
-    [/gasoil\s+[oó]ptimo[^\d]{0,60}(\d{2,3}[.,]\d{1,2})/i,           "gasoilOptimo"],
-    [/gasoil\s+regular[^\d]{0,60}(\d{2,3}[.,]\d{1,2})/i,             "gasoilRegular"],
-    [/gas\s+licuado[^\d]{0,60}(\d{2,3}[.,]\d{1,2})/i,                "glp"],
-    [/glp[^\d]{0,40}(\d{2,3}[.,]\d{1,2})/i,                          "glp"],
-    [/kerosene[^\d]{0,60}(\d{2,3}[.,]\d{1,2})/i,                     "kerosene"],
-    [/avtur[^\d]{0,60}(\d{2,3}[.,]\d{1,2})/i,                        "avtur"],
-    [/fuel\s*oil[^\d]{0,60}(\d{2,3}[.,]\d{1,2})/i,                   "fuelOil"],
+
+  // El layout de MICM home pone PRECIO antes del nombre:
+  //   $323.10 ... Gasolina Premium
+  // Orden de búsqueda importante: específicas antes que generales.
+  // (gas natural antes que glp para evitar match cruzado)
+  const patternsPriceFirst = [
+    [/\$\s*([\d,]+\.\d{1,2})\s*(?:[A-Za-zÁÉÍÓÚáéíóúñÑ\s\.\(\)\-]{0,40})?\bgasolina\s+premium\b/i, "gasolinaPremium"],
+    [/\$\s*([\d,]+\.\d{1,2})\s*(?:[A-Za-zÁÉÍÓÚáéíóúñÑ\s\.\(\)\-]{0,40})?\bgasolina\s+regular\b/i, "gasolinaRegular"],
+    [/\$\s*([\d,]+\.\d{1,2})\s*(?:[A-Za-zÁÉÍÓÚáéíóúñÑ\s\.\(\)\-]{0,40})?\bgasoil\s+[oó]ptimo\b/i, "gasoilOptimo"],
+    [/\$\s*([\d,]+\.\d{1,2})\s*(?:[A-Za-zÁÉÍÓÚáéíóúñÑ\s\.\(\)\-]{0,40})?\bgasoil\s+regular\b/i, "gasoilRegular"],
+    [/\$\s*([\d,]+\.\d{1,2})\s*(?:[A-Za-zÁÉÍÓÚáéíóúñÑ\s\.\(\)\-]{0,40})?\bgas\s+licuado\b/i,    "glp"],
+    [/\$\s*([\d,]+\.\d{1,2})\s*(?:[A-Za-zÁÉÍÓÚáéíóúñÑ\s\.\(\)\-]{0,40})?\bglp\b/i,              "glp"],
+    [/\$\s*([\d,]+\.\d{1,2})\s*(?:[A-Za-zÁÉÍÓÚáéíóúñÑ\s\.\(\)\-]{0,40})?\bgas\s+natural\b/i,    "gasNatural"],
+    [/\$\s*([\d,]+\.\d{1,2})\s*(?:[A-Za-zÁÉÍÓÚáéíóúñÑ\s\.\(\)\-]{0,40})?\b(?:kerosene|avtur)\b/i, "kerosene"],
+    [/\$\s*([\d,]+\.\d{1,2})\s*(?:[A-Za-zÁÉÍÓÚáéíóúñÑ\s\.\(\)\-]{0,40})?\bfuel\s*oil\b/i,       "fuelOil"],
   ];
-  for (const [re, key] of patterns) {
+
+  // Layout alternativo (avisos-semanales): NOMBRE antes del precio.
+  const patternsNameFirst = [
+    [/\bgasolina\s+premium\b[^\d$]{0,60}\$?\s*([\d,]+\.\d{1,2})/i, "gasolinaPremium"],
+    [/\bgasolina\s+regular\b[^\d$]{0,60}\$?\s*([\d,]+\.\d{1,2})/i, "gasolinaRegular"],
+    [/\bgasoil\s+[oó]ptimo\b[^\d$]{0,60}\$?\s*([\d,]+\.\d{1,2})/i, "gasoilOptimo"],
+    [/\bgasoil\s+regular\b[^\d$]{0,60}\$?\s*([\d,]+\.\d{1,2})/i,   "gasoilRegular"],
+    [/\bgas\s+licuado\b[^\d$]{0,60}\$?\s*([\d,]+\.\d{1,2})/i,      "glp"],
+    [/\bglp\b[^\d$]{0,40}\$?\s*([\d,]+\.\d{1,2})/i,                "glp"],
+    [/\bgas\s+natural\b[^\d$]{0,60}\$?\s*([\d,]+\.\d{1,2})/i,      "gasNatural"],
+    [/\b(?:kerosene|avtur)\b[^\d$]{0,60}\$?\s*([\d,]+\.\d{1,2})/i, "kerosene"],
+    [/\bfuel\s*oil\b[^\d$]{0,60}\$?\s*([\d,]+\.\d{1,2})/i,         "fuelOil"],
+  ];
+
+  for (const [re, key] of patternsPriceFirst) {
     if (out[key]) continue;
-    const m = html.match(re);
-    if (m) out[key] = parseFloat(m[1].replace(",", "."));
+    const m = text.match(re);
+    if (m) out[key] = parseFloat(m[1].replace(/,/g, ""));
   }
+  for (const [re, key] of patternsNameFirst) {
+    if (out[key]) continue;
+    const m = text.match(re);
+    if (m) out[key] = parseFloat(m[1].replace(/,/g, ""));
+  }
+
   return Object.keys(out).length >= 2 ? out : null;
 }
 

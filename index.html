@@ -409,6 +409,7 @@
     <div class="card"><h3>Gasoil Óptimo</h3><div class="kpi-value lg" id="mGasoilOp">—</div><div class="kpi-sub">DOP / galón</div></div>
     <div class="card"><h3>Gasoil Regular</h3><div class="kpi-value lg" id="mGasoilReg">—</div><div class="kpi-sub">DOP / galón</div></div>
     <div class="card"><h3>GLP (Propano)</h3><div class="kpi-value lg" id="mGlp">—</div><div class="kpi-sub">DOP / galón</div></div>
+    <div class="card"><h3>Gas Natural (GNL/GNC)</h3><div class="kpi-value lg" id="mGasNatural">—</div><div class="kpi-sub">DOP / m³</div></div>
     <div class="card"><h3>Kerosene / Avtur</h3><div class="kpi-value lg" id="mKerosene">—</div><div class="kpi-sub">DOP / galón</div></div>
   </div>
 
@@ -1098,6 +1099,7 @@ function renderMercados() {
       mGasoilOp:    fuel.gasoilOptimo,
       mGasoilReg:   fuel.gasoilRegular,
       mGlp:         fuel.glp,
+      mGasNatural:  fuel.gasNatural,
       mKerosene:    fuel.kerosene ?? fuel.avtur,
     };
     for (const [id, val] of Object.entries(fuelMap)) {
@@ -1108,7 +1110,7 @@ function renderMercados() {
         `Combustibles — precio por galón (DOP) · ${m.fuentes.fuel}`;
     }
   } else {
-    ["mGasPremium","mGasRegular","mGasoilOp","mGasoilReg","mGlp","mKerosene"].forEach(id => set(id, "No disponible"));
+    ["mGasPremium","mGasRegular","mGasoilOp","mGasoilReg","mGlp","mGasNatural","mKerosene"].forEach(id => set(id, "No disponible"));
     document.getElementById("combustiblesTitle").textContent =
       "Combustibles — precio por galón (DOP) · Sin datos";
   }
