@@ -42,9 +42,17 @@ function periodoFinalFromQs(qsString) {
 
 // Devuelve el store o null si Blobs no está disponible (p.ej. en ejecuciones
 // fuera de Netlify o si la config no se inyectó).
+let _blobsStatus = "unknown";
 function safeStore() {
-  try { return getStore({ name: "sb-cache", consistency: "eventual" }); }
-  catch (e) { return null; }
+  try {
+    const s = getStore({ name: "sb-cache", consistency: "eventual" });
+    _blobsStatus = "ok";
+    return s;
+  } catch (e) {
+    _blobsStatus = "init-error: " + (e.message || String(e));
+    console.warn("[sb-api] Blobs init failed:", e.message);
+    return null;
+  }
 }
 
 const BROWSER_HEADERS = {
@@ -108,11 +116,15 @@ exports.handler = async (event) => {
 
   // L2 — leer Blobs primero
   let cached = null;
+  let blobReadError = null;
   if (store) {
     try {
       const got = await store.getWithMetadata(blobKey, { type: "json" });
       if (got) cached = got;
-    } catch (e) { /* blob layer down: degradar a upstream */ }
+    } catch (e) {
+      blobReadError = e.message || String(e);
+      console.warn("[sb-api] blob get failed:", blobReadError, "key=", blobKey.slice(0, 80));
+    }
   }
 
   if (cached) {
@@ -160,6 +172,7 @@ exports.handler = async (event) => {
   const contentType = upstream.headers.get("content-type") || "application/json";
 
   // Persistir según resultado
+  let blobWriteError = null;
   if (store) {
     if (upstream.ok) {
       // 2xx — caché normal según política por antigüedad
@@ -169,14 +182,21 @@ exports.handler = async (event) => {
         await store.setJSON(blobKey, { body, contentType, status: upstream.status }, {
           metadata: { expiresAt, fetchedAt: now },
         });
-      } catch (e) { /* ignore blob write errors */ }
+        console.log("[sb-api] blob set ok:", blobKey.slice(0, 80), "ttl=", policy.ttlMs);
+      } catch (e) {
+        blobWriteError = e.message || String(e);
+        console.warn("[sb-api] blob set failed:", blobWriteError, "key=", blobKey.slice(0, 80));
+      }
     } else if (upstream.status >= 400 && upstream.status < 500) {
       // 4xx — caché corto (5 min) para no martillar endpoints rotos
       try {
         await store.setJSON(blobKey, { body, contentType, status: upstream.status }, {
           metadata: { expiresAt: now + 5 * 60 * 1000, fetchedAt: now },
         });
-      } catch (e) { /* ignore */ }
+      } catch (e) {
+        blobWriteError = e.message || String(e);
+        console.warn("[sb-api] blob set 4xx failed:", blobWriteError);
+      }
     } else if (upstream.status >= 500 && cached && cached.data) {
       // 5xx + tenemos blob → servir stale
       return {
@@ -200,6 +220,9 @@ exports.handler = async (event) => {
       "Content-Type": contentType,
       "Cache-Control": "public, max-age=300, s-maxage=21600",
       "X-Cache": cached ? "REFRESH-BLOB" : "MISS-BLOB",
+      "X-Blobs-Status": _blobsStatus,
+      ...(blobReadError  ? { "X-Blobs-Read-Error":  blobReadError.slice(0, 200) }  : {}),
+      ...(blobWriteError ? { "X-Blobs-Write-Error": blobWriteError.slice(0, 200) } : {}),
     },
     body,
   };
