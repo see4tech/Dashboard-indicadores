@@ -144,6 +144,7 @@ exports.handler = async (event) => {
           "Content-Type": data.contentType || "application/json",
           "Cache-Control": "public, max-age=300, s-maxage=21600",
           "X-Cache": "HIT-BLOB",
+          "X-Blobs-Status": _blobsStatus,
         },
         body: data.body || "",
       };
@@ -166,6 +167,7 @@ exports.handler = async (event) => {
           "Content-Type": cached.data.contentType || "application/json",
           "Cache-Control": "public, max-age=60",
           "X-Cache": "STALE-BLOB",
+          "X-Blobs-Status": _blobsStatus,
           "X-Stale-Reason": "upstream-network-error",
         },
         body: cached.data.body || "",
@@ -212,6 +214,7 @@ exports.handler = async (event) => {
           "Content-Type": cached.data.contentType || "application/json",
           "Cache-Control": "public, max-age=60",
           "X-Cache": "STALE-BLOB",
+          "X-Blobs-Status": _blobsStatus,
           "X-Stale-Reason": "upstream-" + upstream.status,
         },
         body: cached.data.body || "",
