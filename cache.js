@@ -185,12 +185,18 @@
     })();
   }
 
+  function _cachedErr(msg) {
+    const e = new Error(msg);
+    e.fromCache = true;
+    return e;
+  }
+
   async function _getOrFetch(url) {
     const now = SBCache._now();
     // L1
     const l1 = _l1.get(url);
     if (l1 && (l1.expiresAt == null || l1.expiresAt > now)) {
-      if (l1.errorMessage) throw new Error(l1.errorMessage);
+      if (l1.errorMessage) throw _cachedErr(l1.errorMessage);
       return l1.body;
     }
     // L2
@@ -199,7 +205,7 @@
       const fresh = (l2.expiresAt == null || l2.expiresAt > now);
       if (fresh) {
         _l1.set(url, l2);
-        if (l2.errorMessage) throw new Error(l2.errorMessage);
+        if (l2.errorMessage) throw _cachedErr(l2.errorMessage);
         return l2.body;
       }
       // Sólo aplicamos SWR a registros buenos (con body), no a errores cacheados

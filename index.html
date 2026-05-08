@@ -641,7 +641,9 @@ function filterRows(rows) {
 
 function safeGet(path, params) {
   return SB.get(path, params).catch(err => {
-    console.warn("API error", path, err.message);
+    // Errores servidos desde cache no hicieron red — silenciamos para no
+    // saturar la consola en cada reload mientras el upstream está caído.
+    if (!err || !err.fromCache) console.warn("API error", path, err && err.message);
     return [];
   });
 }
