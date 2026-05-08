@@ -75,10 +75,11 @@
     };
   }
 
-  // TTL para errores cacheados (4xx/5xx/network). Suficientemente corto para
-  // recuperar rápido cuando el upstream vuelve, suficientemente largo para
-  // no martillar al SB cuando está caído o no tiene datos para ese mes.
-  const ERROR_TTL_MS = 5 * 60 * 1000;
+  // TTL para errores cacheados (4xx/5xx/network). 30 min es razonable para
+  // sobrevivir caídas de upstream sin martillar y sin esperar demasiado para
+  // recuperar cuando vuelve. El botón "Recargar" invalida todo si querés
+  // forzar un retry inmediato.
+  const ERROR_TTL_MS = 30 * 60 * 1000;
 
   function _buildErrorRecord(url, errorMessage, status) {
     const periodoFinal = SBCache.parsePeriodoFinal(url);
@@ -413,6 +414,17 @@
   SBCache.invalidateAll = async function () {
     _l1.clear();
     await SBCache._idbClear();
+  };
+
+  // Diagnóstico: cuenta entradas en cache y separa buenas vs error.
+  // Usar en console: await SBCache.stats()
+  SBCache.stats = async function () {
+    const all = await SBCache._idbGetAll();
+    const good = all.filter(r => !r.errorMessage).length;
+    const errors = all.filter(r => r.errorMessage).length;
+    const now = SBCache._now();
+    const expired = all.filter(r => r.expiresAt != null && r.expiresAt <= now).length;
+    return { total: all.length, good, errors, expired, l1: _l1.size };
   };
 
   SBCache._closeForTests = function () {
