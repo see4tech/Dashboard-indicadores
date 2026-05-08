@@ -265,7 +265,10 @@ async function fetchMercados(isRefresh = false) {
   const metals = metalsR.status === "fulfilled" ? metalsR.value : null;
   const oil    = oilR.status    === "fulfilled" ? oilR.value    : null;
   const btc    = btcR.status    === "fulfilled" ? btcR.value    : null;
-  const fuel   = fuelR.status   === "fulfilled" ? fuelR.value   : null;
+  const fuelRaw = fuelR.status === "fulfilled" ? fuelR.value : null;
+  // fuel resuelto a precios válidos (con .prices) o null si solo trae __debug
+  const fuel = (fuelRaw && fuelRaw.prices) ? fuelRaw : null;
+  const fuelDebug = (fuelRaw && fuelRaw.__debug) ? fuelRaw.__debug : null;
 
   // Tasa de referencia USD → DOP (mid-market)
   const usdDop = forex?.usdDop ?? null;
@@ -305,6 +308,7 @@ async function fetchMercados(isRefresh = false) {
       dopPerBarrel: (oil && usdDop) ? +(oil * usdDop).toFixed(2) : null,
     },
     fuel: fuel?.prices ?? null,
+    fuelDebug,
   };
 
   return {
@@ -427,43 +431,45 @@ async function fetchBTC() {
  * MICM publica precios cada semana — intentamos su API y luego la web.
  */
 async function fetchFuelPrices() {
-  // La home page de MICM tiene la sección "Precios de Combustibles" con los
-  // precios actuales. La scrapeamos directo — más confiable que rutas
-  // específicas que cambian.
+  const debug = { tried: [] };
+  // UA más realista para no ser bloqueados como bot
+  const browserHeaders = {
+    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept-Language": "es-DO,es;q=0.9,en;q=0.8",
+  };
+
   for (const url of [
     "https://micm.gob.do/",
     "https://micm.gob.do/direcciones/combustibles/avisos-semanales-de-precios/avisos-semanales-de-precios-de-combustibles/",
   ]) {
     try {
-      const r = await fetchWT(
-        url,
-        { headers: { "User-Agent": "Mozilla/5.0", "Accept": "text/html" } },
-        10000
-      );
-      if (r.ok) {
-        const html = await r.text();
-        const prices = parseMICMHtml(html);
-        if (prices) return { prices, fuente: url };
+      const r = await fetchWT(url, { headers: browserHeaders }, 10000);
+      const status = r.status;
+      const html = r.ok ? await r.text() : "";
+      const sample = html.slice(0, 300);
+      const found = html.toLowerCase().includes("gasolina premium");
+      const prices = html ? parseMICMHtml(html) : null;
+      debug.tried.push({
+        url, status, htmlLen: html.length, foundPremium: found,
+        parsedKeys: prices ? Object.keys(prices) : null,
+        sample,
+      });
+      if (prices) {
+        console.log("[micm] OK from", url, "→", JSON.stringify(prices));
+        return { prices, fuente: url };
+      } else {
+        console.warn("[micm] no prices from", url, "status=", status, "len=", html.length, "premium-in-html=", found);
       }
-    } catch {}
+    } catch (e) {
+      debug.tried.push({ url, error: e.message || String(e) });
+      console.warn("[micm] fetch failed", url, e.message || String(e));
+    }
   }
 
-  // Último intento: endpoints JSON especulativos por si algún día existen
-  for (const url of [
-    "https://micm.gob.do/api/precios-combustibles",
-    "https://micm.gob.do/api/combustibles/precios",
-  ]) {
-    try {
-      const r = await fetchWT(url, {}, 5000);
-      if (r.ok) {
-        const j = await r.json();
-        const prices = normalizeMICMJson(j);
-        if (prices) return { prices, fuente: url };
-      }
-    } catch {}
-  }
-
-  return null;
+  // Anexamos debug al return null para visibilidad desde el endpoint
+  // (queda en el campo `fuel` cuando falla)
+  return { __debug: debug };
 }
 
 function normalizeMICMJson(j) {
