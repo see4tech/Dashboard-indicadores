@@ -322,10 +322,43 @@ async function fetchForex() {
   return null;
 }
 
-/** Oro y plata (USD/ozt) — metals.live */
+/** Oro y plata (USD/ozt) — gold-api.com (gratis, sin key) con fallback. */
 async function fetchMetals() {
+  // Intento 1: api.gold-api.com (free, working as of late 2025)
   try {
-    const r = await fetchWT("https://api.metals.live/v1/spot/gold,silver", 8000);
+    const [goldR, silverR] = await Promise.allSettled([
+      fetchWT("https://api.gold-api.com/price/XAU", 6000),
+      fetchWT("https://api.gold-api.com/price/XAG", 6000),
+    ]);
+    let gold = null, silver = null;
+    if (goldR.status === "fulfilled" && goldR.value.ok) {
+      const j = await goldR.value.json();
+      if (j && typeof j.price === "number") gold = j.price;
+    }
+    if (silverR.status === "fulfilled" && silverR.value.ok) {
+      const j = await silverR.value.json();
+      if (j && typeof j.price === "number") silver = j.price;
+    }
+    if (gold && silver) return { gold, silver, fuente: "gold-api.com" };
+  } catch {}
+
+  // Intento 2: data-asg.goldprice.org (usado por goldprice.org)
+  try {
+    const r = await fetchWT(
+      "https://data-asg.goldprice.org/dbXRates/USD",
+      { headers: { "User-Agent": "Mozilla/5.0", "Accept": "application/json" } },
+      6000
+    );
+    const j = await r.json();
+    const item = Array.isArray(j?.items) ? j.items[0] : null;
+    if (item && item.xauPrice && item.xagPrice) {
+      return { gold: item.xauPrice, silver: item.xagPrice, fuente: "goldprice.org" };
+    }
+  } catch {}
+
+  // Intento 3: legacy metals.live (probablemente muerto, lo dejamos por si vuelve)
+  try {
+    const r = await fetchWT("https://api.metals.live/v1/spot/gold,silver", 5000);
     const j = await r.json();
     let gold, silver;
     if (Array.isArray(j)) {
@@ -339,6 +372,7 @@ async function fetchMetals() {
     }
     if (gold && silver) return { gold, silver, fuente: "metals.live" };
   } catch {}
+
   return null;
 }
 
@@ -378,7 +412,7 @@ async function fetchBTC() {
  * MICM publica precios cada semana — intentamos su API y luego la web.
  */
 async function fetchFuelPrices() {
-  // Intento con endpoints JSON conocidos/especulativos
+  // Intento con endpoints JSON conocidos/especulativos del MICM
   for (const url of [
     "https://micm.gob.do/api/precios-combustibles",
     "https://micm.gob.do/api/combustibles/precios",
@@ -393,19 +427,25 @@ async function fetchFuelPrices() {
     } catch {}
   }
 
-  // Fallback: parsear HTML de la página pública
-  try {
-    const r = await fetchWT(
-      "https://micm.gob.do/combustibles",
-      { headers: { "User-Agent": "Mozilla/5.0", "Accept": "text/html" } },
-      10000
-    );
-    if (r.ok) {
-      const html = await r.text();
-      const prices = parseMICMHtml(html);
-      if (prices) return { prices, fuente: "micm.gob.do" };
-    }
-  } catch {}
+  // Fallback: parsear HTML de la página pública (varias rutas conocidas)
+  for (const url of [
+    "https://micm.gob.do/avisos-combustibles",
+    "https://micm.gob.do/combustibles",
+    "https://micm.gob.do/avisos-de-precios-de-combustibles",
+  ]) {
+    try {
+      const r = await fetchWT(
+        url,
+        { headers: { "User-Agent": "Mozilla/5.0", "Accept": "text/html" } },
+        10000
+      );
+      if (r.ok) {
+        const html = await r.text();
+        const prices = parseMICMHtml(html);
+        if (prices) return { prices, fuente: url };
+      }
+    } catch {}
+  }
 
   return null;
 }
