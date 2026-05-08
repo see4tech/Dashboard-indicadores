@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__plugin_context-mode_context-mode__ctx_batch_execute",
+      "mcp__plugin_context-mode_context-mode__ctx_execute_file",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git commit *)",
+      "Bash(npm --version)",
+      "Bash(npm install *)",
+      "Bash(npm test *)",
+      "Bash(node -e \"const SBCache = require\\('./cache.js'\\); console.log\\('cache.js loads OK'\\); console.log\\('Methods:', Object.keys\\(SBCache\\).filter\\(k => typeof SBCache[k] === 'function'\\).sort\\(\\).join\\(', '\\)\\);\")",
+      "Bash(node -e ' *)",
+      "Bash(lsof -iTCP -sTCP:LISTEN)",
+      "Bash(curl -sS -m 15 -o /tmp/sb_test.json -w 'HTTP %{http_code} | %{time_total}s | %{size_download}B\\\\n' -H 'Ocp-Apim-Subscription-Key: 79e2336d3bcc49d3941ad2c02a47e9bf' -H 'Accept: application/json' -H 'User-Agent: Mozilla/5.0 \\(Macintosh; Intel Mac OS X 10_15_7\\) AppleWebKit/537.36 \\(KHTML, like Gecko\\) Chrome/126.0.0.0 Safari/537.36' -H 'Origin: https://desarrollador.sb.gob.do' -H 'Referer: https://desarrollador.sb.gob.do/' 'https://apis.sb.gob.do/estadisticas/v2/carteras/creditos/moneda?periodoInicial=2024-01&periodoFinal=2024-01&paginas=1&registros=5&tipoEntidad=TODOS')",
+      "Read(//tmp/**)",
+      "Bash(curl -sS -m 10 -o /dev/null -w \"https://apis.sb.gob.do — HTTP %{http_code} | %{time_total}s\\\\n\" \"https://apis.sb.gob.do/\")",
+      "Bash(nslookup apis.sb.gob.do)",
+      "Bash(ping -c 2 -W 2000 apis.sb.gob.do)",
+      "mcp__plugin_context-mode_context-mode__ctx_execute",
+      "mcp__plugin_context-mode_context-mode__ctx_search"
+    ]
+  }
+}

@@ -16,7 +16,7 @@
  *   SB_API_KEY = <tu Ocp-Apim-Subscription-Key>
  */
 
-const { getStore } = require("@netlify/blobs");
+const { getStore, connectLambda } = require("@netlify/blobs");
 
 const UPSTREAM = "https://apis.sb.gob.do/estadisticas/v2";
 
@@ -72,6 +72,11 @@ const CORS_HEADERS = {
 };
 
 exports.handler = async (event) => {
+  // Inyecta el contexto de Blobs al runtime cuando la function corre en
+  // formato Lambda legacy (exports.handler). Sin esto, getStore() lanza
+  // "environment has not been configured".
+  try { connectLambda(event); } catch (e) { /* ya inyectado o no aplica */ }
+
   if (event.httpMethod === "OPTIONS") {
     return { statusCode: 204, headers: CORS_HEADERS, body: "" };
   }
