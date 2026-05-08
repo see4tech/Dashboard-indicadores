@@ -9,6 +9,9 @@
 
     init: null,  // assigned below
     _mode: null,
+    // Cuando true, get() salta IDB read y pide al server saltar Blobs L2
+    // (vía query param ?_refresh=1). Lo activa el botón "Recargar datos".
+    _forceRefresh: false,
     get: null,  // assigned below
     preload: null,  // assigned below
     invalidateAll: null,  // assigned below
@@ -227,6 +230,36 @@
       const r = await SBCache._fetch(url);
       if (r.status === 204) return [];
       return _normalizeBody(await r.json());
+    }
+    // Force refresh: salta IDB y pide al server saltar Blobs (?_refresh=1)
+    // Persiste el resultado en IDB bajo la URL limpia (sin _refresh).
+    if (SBCache._forceRefresh) {
+      const sep = url.includes("?") ? "&" : "?";
+      const refreshUrl = url + sep + "_refresh=1";
+      const r = await SBCache._fetch(refreshUrl, {
+        headers: { "Accept": "application/json" },
+        cache: "no-store",
+      });
+      if (r.status === 204) {
+        const empty = [];
+        const rec = _buildRecord(url, empty, 204);
+        await _safePut(rec);
+        _l1.set(url, rec);
+        return empty;
+      }
+      const parsed = await r.json().catch(() => null);
+      if (!r.ok) {
+        const msg = (parsed && parsed.Message) || `HTTP ${r.status}`;
+        const errRec = _buildErrorRecord(url, msg, r.status);
+        await _safePut(errRec);
+        _l1.set(url, errRec);
+        throw new Error(msg);
+      }
+      const body = _normalizeBody(parsed);
+      const rec = _buildRecord(url, body, r.status);
+      await _safePut(rec);
+      _l1.set(url, rec);
+      return body;
     }
     // dedup: cualquier llamada concurrente comparte la misma promesa
     if (_inflight.has(url)) return _inflight.get(url);

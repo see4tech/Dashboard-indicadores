@@ -1316,10 +1316,15 @@ document.addEventListener("DOMContentLoaded", () => {
     if (b) showTab(b.dataset.tab);
   });
 
-  // Recargar = limpiar cache del SB API + volver a traer todo
+  // Recargar = limpiar cache del SB API (IDB + Blobs) + volver a traer todo
   document.getElementById("reloadBtn").addEventListener("click", async () => {
     await SB.clearCache();
-    await preloadAll();
+    if (typeof SBCache !== "undefined") SBCache._forceRefresh = true;
+    try {
+      await preloadAll();
+    } finally {
+      if (typeof SBCache !== "undefined") SBCache._forceRefresh = false;
+    }
     warmExtraScopes();
   });
 

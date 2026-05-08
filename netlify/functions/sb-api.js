@@ -86,9 +86,14 @@ exports.handler = async (event) => {
   path = path.replace(/^\/api/, "");
   if (!path.startsWith("/")) path = "/" + path;
 
+  // ?_refresh=1 lo manda el botón "Recargar datos" para saltear caches
+  // (Blobs L2 + CDN). Detectamos antes de rutear porque /mercados y
+  // /geo/provincias no pasan por la lógica de Blobs pero sí por CDN.
+  const isRefresh = !!(event.queryStringParameters && event.queryStringParameters._refresh);
+
   // Endpoint: datos de mercados (divisas, commodities, combustibles)
   if (path === "/mercados") {
-    return fetchMercados();
+    return fetchMercados(isRefresh);
   }
 
   // Endpoint: GeoJSON de provincias de RD
@@ -113,6 +118,13 @@ exports.handler = async (event) => {
     }
   }
 
+  // Detectar y stripear _refresh=1 (force-refresh del cliente). Cuando está
+  // presente saltamos la lectura de Blobs y forzamos un fetch al upstream;
+  // el resultado SÍ se persiste en Blobs bajo la clave limpia para que los
+  // próximos reads (sin _refresh) lo encuentren.
+  const forceRefresh = qs.has("_refresh");
+  if (forceRefresh) qs.delete("_refresh");
+
   const qsString = qs.toString();
   const url = UPSTREAM + path + (qsString ? "?" + qsString : "");
   // Blob keys no pueden empezar con / — stripeamos la barra inicial.
@@ -120,10 +132,10 @@ exports.handler = async (event) => {
   const store = safeStore();
   const now = Date.now();
 
-  // L2 — leer Blobs primero
+  // L2 — leer Blobs primero (salvo force-refresh)
   let cached = null;
   let blobReadError = null;
-  if (store) {
+  if (store && !forceRefresh) {
     try {
       const got = await store.getWithMetadata(blobKey, { type: "json" });
       if (got) cached = got;
@@ -240,7 +252,7 @@ exports.handler = async (event) => {
 /* ─────────────────────────────────────────────────────────
    /mercados — agrega datos de fuentes externas gratuitas
    ───────────────────────────────────────────────────────── */
-async function fetchMercados() {
+async function fetchMercados(isRefresh = false) {
   const [forexR, metalsR, oilR, btcR, fuelR] = await Promise.allSettled([
     fetchForex(),
     fetchMetals(),
@@ -300,8 +312,11 @@ async function fetchMercados() {
     headers: {
       ...CORS_HEADERS,
       "Content-Type": "application/json",
-      // 15 min en cliente, 1 hora en CDN Netlify
-      "Cache-Control": "public, max-age=900, s-maxage=3600",
+      // En refresh: no-store para que CDN no cachee la respuesta refrescada.
+      // En normal: 15 min cliente, 1 hora CDN.
+      "Cache-Control": isRefresh
+        ? "no-store"
+        : "public, max-age=900, s-maxage=3600",
     },
     body: JSON.stringify(data),
   };
