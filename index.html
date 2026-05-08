@@ -314,8 +314,8 @@
 <section data-pane="comparativa" hidden>
   <div class="grid cards-2">
     <div class="card chart-card"><h2>ROA — ranking de entidades</h2><div class="chart-wrap tall"><canvas id="chartRankRoa"></canvas></div></div>
-    <div class="card chart-card"><h2>Solvencia — ranking de entidades</h2><div class="chart-wrap tall"><canvas id="chartRankSolv"></canvas></div></div>
-    <div class="card chart-card"><h2>Morosidad — ranking (menor es mejor)</h2><div class="chart-wrap tall"><canvas id="chartRankMoro"></canvas></div></div>
+    <div class="card chart-card"><h2>ROE — ranking de entidades</h2><div class="chart-wrap tall"><canvas id="chartRankSolv"></canvas></div></div>
+    <div class="card chart-card"><h2>Ingresos financieros / Activos productivos — ranking</h2><div class="chart-wrap tall"><canvas id="chartRankMoro"></canvas></div></div>
     <div class="card chart-card"><h2>Patrimonio Neto por entidad</h2><div class="chart-wrap tall"><canvas id="chartRankPat"></canvas></div></div>
   </div>
 </section>
@@ -914,17 +914,33 @@ function renderComparativa() {
     ["chartRankRoa","chartRankSolv","chartRankMoro","chartRankPat"].forEach(showEmpty);
     return;
   }
-  const indicadores = [
-    "ROA (Rentabilidad de los Activos)",
-    "Indice de Solvencia",
-    "Cartera de Créditos Vencida (Capital y Rendimientos) / Total de Cartera de Crédito Bruta",
-    "Total Patrimonio Neto",
-  ];
-  const grab = (n) => data.filter(r => r.indicador === n).map(r => ({ entidad: r.entidad, valor: r.valor }));
-  rankBar("chartRankRoa",  grab(indicadores[0]).sort((a, b) => b.valor - a.valor).slice(0, 18), "ROA %",       PALETTE[3]);
-  rankBar("chartRankSolv", grab(indicadores[1]).sort((a, b) => b.valor - a.valor).slice(0, 18), "Solvencia %", PALETTE[0]);
-  rankBar("chartRankMoro", grab(indicadores[2]).sort((a, b) => a.valor - b.valor).slice(0, 18), "Morosidad %", PALETTE[5]);
-  rankBar("chartRankPat",  grab(indicadores[3]).sort((a, b) => b.valor - a.valor).slice(0, 18), "Patrimonio",  PALETTE[1]);
+
+  // Diagnóstico: imprime nombres únicos de indicador a la consola la primera
+  // vez. Útil para descubrir qué nombres devuelve SB en este endpoint y
+  // ajustar los regex si hace falta.
+  if (!window.__SB_NAMES_LOGGED__) {
+    const names = [...new Set(data.map(r => r.indicador))].sort();
+    console.info("[SB] /indicadores/financieros expone estos nombres:", names);
+    window.__SB_NAMES_LOGGED__ = true;
+  }
+
+  // Match por regex case-insensitive — robusto a pequeñas variaciones de
+  // nombres (espacios, acentos, mayúsculas) y a renombres del SB.
+  const grab = (re) => data
+    .filter(r => re.test(r.indicador || ""))
+    .map(r => ({ entidad: r.entidad, valor: r.valor }));
+
+  // ROA y Patrimonio: existen confirmado en /indicadores/financieros.
+  // ROE: substituto razonable de "solvencia/eficiencia" — existe.
+  // Pasivos Totales: substituto del 4to chart antes vacío.
+  rankBar("chartRankRoa",  grab(/^ROA/i).sort((a, b) => b.valor - a.valor).slice(0, 18),
+          "ROA %", PALETTE[3]);
+  rankBar("chartRankSolv", grab(/^ROE.*Patrimonio/i).sort((a, b) => b.valor - a.valor).slice(0, 18),
+          "ROE %", PALETTE[0]);
+  rankBar("chartRankMoro", grab(/Ingresos.*Activos\s+Productivos/i).sort((a, b) => b.valor - a.valor).slice(0, 18),
+          "Ingresos / Activos productivos %", PALETTE[5]);
+  rankBar("chartRankPat",  grab(/Patrimonio\s+Neto/i).sort((a, b) => b.valor - a.valor).slice(0, 18),
+          "Patrimonio Neto", PALETTE[1]);
 }
 
 // Mapa — instancias persistentes
