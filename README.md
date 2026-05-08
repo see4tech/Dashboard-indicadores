@@ -105,10 +105,40 @@ El dashboard usa principalmente:
 - **Agregar tab:** añade un `<button data-tab="...">` al nav, una `<section data-pane="...">` y un loader en el objeto `LOADERS`.
 - **Cambiar TTL del cache:** ajusta `s-maxage` en `netlify/functions/sb-api.js`.
 
-## Cache local (IndexedDB)
+## Cache (2 capas)
 
-El dashboard cachea las respuestas del API SB en IndexedDB del navegador para
-que cambios de filtro sean instantáneos. Detalles en `cache.js`:
+```
+Browser ─┬─ L1 IndexedDB (cache.js — por sesión, persiste reload)
+         │
+         └─ /api/* → Netlify Function ─┬─ L2 Netlify Blobs (compartido global)
+                                        │   ├─ HIT → respuesta instantánea
+                                        │   └─ MISS → fetch SB → save L2
+                                        └─ SB upstream
+```
+
+### L2 — Netlify Blobs (server-side, compartido entre todos los usuarios)
+
+`netlify/functions/sb-api.js` consulta el store `sb-cache` antes de pegarle a
+SB. La data persiste entre invocaciones de la function y entre usuarios:
+- **Meses ≥ 4 atrás** → caché **infinito** (SB nunca los modifica).
+- **1-3 meses atrás** → 7 días.
+- **Mes actual** → 24h.
+- **Sin `periodoFinal`** (ej. `/mercados`) → 1h.
+- **Errores 4xx** → 5 min (no martillar endpoints rotos).
+- **Errores 5xx / red** → no se persisten; si hay blob previo se sirve stale
+  (header `X-Cache: STALE-BLOB`) → **dashboard sigue funcionando aunque SB esté
+  caído**.
+
+Headers de visibilidad: `X-Cache: HIT-BLOB | MISS-BLOB | STALE-BLOB | REFRESH-BLOB`.
+
+**Pre-poblado** (opcional): cuando SB esté arriba, una llamada exitosa popula
+Blobs para todos. Para forzar bulk-populate, se puede correr `probar_api_sb.py`
+modificado apuntando a la URL del sitio (`https://<sitio>.netlify.app/api/...`)
+en lugar del upstream directo.
+
+### L1 — IndexedDB (browser-side)
+
+El dashboard cachea respuestas en IndexedDB del navegador. Detalles en `cache.js`:
 
 - **L1**: Map en memoria (microsegundos).
 - **L2**: IndexedDB (~10-100ms, persiste entre recargas).

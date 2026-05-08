@@ -4,11 +4,48 @@
  *
  * Ruta: /api/<endpoint>?...  → reescrito por netlify.toml a esta función.
  *
+ * Cache L2 vía Netlify Blobs (`sb-cache`):
+ *   - Persistente entre invocaciones de la function y compartido entre usuarios.
+ *   - TTL por antigüedad del periodoFinal: meses cerrados (>=4 atrás) nunca
+ *     expiran; 1-3 meses atrás → 7 días; mes actual → 24h; sin periodoFinal
+ *     → 1h; errores 4xx → 5 min; 5xx no se persisten.
+ *   - Cuando upstream falla y hay blob existente (aunque expirado), se sirve
+ *     stale (header X-Cache: STALE-BLOB).
+ *
  * Variables de entorno requeridas:
  *   SB_API_KEY = <tu Ocp-Apim-Subscription-Key>
  */
 
+const { getStore } = require("@netlify/blobs");
+
 const UPSTREAM = "https://apis.sb.gob.do/estadisticas/v2";
+
+const HOUR = 3600 * 1000;
+const DAY  = 24 * HOUR;
+
+function policyForBlob(periodoFinal, now) {
+  if (!periodoFinal) return { ttlMs: HOUR };
+  const m = /^(\d{4})-(\d{2})$/.exec(periodoFinal);
+  if (!m) return { ttlMs: HOUR };
+  const y = +m[1], mo = +m[2];
+  const d = new Date(now);
+  const delta = (d.getUTCFullYear() - y) * 12 + (d.getUTCMonth() + 1 - mo);
+  if (delta >= 4) return { ttlMs: null };          // inmutable
+  if (delta >= 1) return { ttlMs: 7 * DAY };       // 1-3 meses atrás
+  return { ttlMs: DAY };                           // mes actual / futuro
+}
+
+function periodoFinalFromQs(qsString) {
+  try { return new URLSearchParams(qsString).get("periodoFinal"); }
+  catch { return null; }
+}
+
+// Devuelve el store o null si Blobs no está disponible (p.ej. en ejecuciones
+// fuera de Netlify o si la config no se inyectó).
+function safeStore() {
+  try { return getStore({ name: "sb-cache", consistency: "eventual" }); }
+  catch (e) { return null; }
+}
 
 const BROWSER_HEADERS = {
   "Accept": "application/json, text/plain, */*",
@@ -63,19 +100,98 @@ exports.handler = async (event) => {
     }
   }
 
-  const url = UPSTREAM + path + (qs.toString() ? "?" + qs.toString() : "");
+  const qsString = qs.toString();
+  const url = UPSTREAM + path + (qsString ? "?" + qsString : "");
+  const blobKey = path + (qsString ? "?" + qsString : "");
+  const store = safeStore();
+  const now = Date.now();
 
+  // L2 — leer Blobs primero
+  let cached = null;
+  if (store) {
+    try {
+      const got = await store.getWithMetadata(blobKey, { type: "json" });
+      if (got) cached = got;
+    } catch (e) { /* blob layer down: degradar a upstream */ }
+  }
+
+  if (cached) {
+    const expiresAt = cached.metadata && cached.metadata.expiresAt;
+    if (expiresAt == null || expiresAt > now) {
+      const data = cached.data || {};
+      return {
+        statusCode: data.status || 200,
+        headers: {
+          ...CORS_HEADERS,
+          "Content-Type": data.contentType || "application/json",
+          "Cache-Control": "public, max-age=300, s-maxage=21600",
+          "X-Cache": "HIT-BLOB",
+        },
+        body: data.body || "",
+      };
+    }
+  }
+
+  // L3 — upstream SB
   let upstream;
   try {
     upstream = await fetch(url, {
       headers: { ...BROWSER_HEADERS, "Ocp-Apim-Subscription-Key": apiKey },
     });
   } catch (e) {
+    // Si hay blob aunque sea expirado, lo servimos stale-while-error
+    if (cached && cached.data) {
+      return {
+        statusCode: cached.data.status || 200,
+        headers: {
+          ...CORS_HEADERS,
+          "Content-Type": cached.data.contentType || "application/json",
+          "Cache-Control": "public, max-age=60",
+          "X-Cache": "STALE-BLOB",
+          "X-Stale-Reason": "upstream-network-error",
+        },
+        body: cached.data.body || "",
+      };
+    }
     return jsonError(502, "upstream: " + (e.message || String(e)));
   }
 
   const body = await upstream.text();
   const contentType = upstream.headers.get("content-type") || "application/json";
+
+  // Persistir según resultado
+  if (store) {
+    if (upstream.ok) {
+      // 2xx — caché normal según política por antigüedad
+      const policy = policyForBlob(periodoFinalFromQs(qsString), now);
+      const expiresAt = policy.ttlMs == null ? null : now + policy.ttlMs;
+      try {
+        await store.setJSON(blobKey, { body, contentType, status: upstream.status }, {
+          metadata: { expiresAt, fetchedAt: now },
+        });
+      } catch (e) { /* ignore blob write errors */ }
+    } else if (upstream.status >= 400 && upstream.status < 500) {
+      // 4xx — caché corto (5 min) para no martillar endpoints rotos
+      try {
+        await store.setJSON(blobKey, { body, contentType, status: upstream.status }, {
+          metadata: { expiresAt: now + 5 * 60 * 1000, fetchedAt: now },
+        });
+      } catch (e) { /* ignore */ }
+    } else if (upstream.status >= 500 && cached && cached.data) {
+      // 5xx + tenemos blob → servir stale
+      return {
+        statusCode: cached.data.status || 200,
+        headers: {
+          ...CORS_HEADERS,
+          "Content-Type": cached.data.contentType || "application/json",
+          "Cache-Control": "public, max-age=60",
+          "X-Cache": "STALE-BLOB",
+          "X-Stale-Reason": "upstream-" + upstream.status,
+        },
+        body: cached.data.body || "",
+      };
+    }
+  }
 
   return {
     statusCode: upstream.status,
@@ -83,6 +199,7 @@ exports.handler = async (event) => {
       ...CORS_HEADERS,
       "Content-Type": contentType,
       "Cache-Control": "public, max-age=300, s-maxage=21600",
+      "X-Cache": cached ? "REFRESH-BLOB" : "MISS-BLOB",
     },
     body,
   };
