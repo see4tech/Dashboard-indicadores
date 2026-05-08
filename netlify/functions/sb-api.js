@@ -432,13 +432,45 @@ async function fetchBTC() {
  */
 async function fetchFuelPrices() {
   const debug = { tried: [] };
-  // UA más realista para no ser bloqueados como bot
   const browserHeaders = {
     "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
     "Accept-Language": "es-DO,es;q=0.9,en;q=0.8",
   };
 
+  // Fuente primaria: API JSON de conectate.com.do — incluye Kerosene + GNV +
+  // los 5 que también publica MICM. Es la fuente más completa.
+  try {
+    const r = await fetchWT(
+      "https://graphs.conectate.com.do/api/fuel-table-data",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+          "Accept": "application/json",
+          "User-Agent": browserHeaders["User-Agent"],
+          "Origin": "https://www.conectate.com.do",
+          "Referer": "https://www.conectate.com.do/",
+          "X-Requested-With": "XMLHttpRequest",
+        },
+        body: "slug=",
+      },
+      10000
+    );
+    if (r.ok) {
+      const j = await r.json();
+      const prices = normalizeConectateFuel(j);
+      if (prices) {
+        console.log("[fuel] OK from conectate →", JSON.stringify(prices));
+        return { prices, fuente: "conectate.com.do" };
+      }
+    }
+    debug.tried.push({ url: "conectate fuel-table-data", status: r.status });
+  } catch (e) {
+    debug.tried.push({ url: "conectate fuel-table-data", error: e.message || String(e) });
+  }
+
+  // Fallback: scrape de la home page de MICM (6 fuels, sin Kerosene).
   for (const url of [
     "https://micm.gob.do/",
     "https://micm.gob.do/direcciones/combustibles/avisos-semanales-de-precios/avisos-semanales-de-precios-de-combustibles/",
@@ -447,29 +479,42 @@ async function fetchFuelPrices() {
       const r = await fetchWT(url, { headers: browserHeaders }, 10000);
       const status = r.status;
       const html = r.ok ? await r.text() : "";
-      const sample = html.slice(0, 300);
-      const found = html.toLowerCase().includes("gasolina premium");
       const prices = html ? parseMICMHtml(html) : null;
-      debug.tried.push({
-        url, status, htmlLen: html.length, foundPremium: found,
-        parsedKeys: prices ? Object.keys(prices) : null,
-        sample,
-      });
+      debug.tried.push({ url, status, htmlLen: html.length, parsedKeys: prices ? Object.keys(prices) : null });
       if (prices) {
-        console.log("[micm] OK from", url, "→", JSON.stringify(prices));
+        console.log("[fuel] OK from", url, "→", JSON.stringify(prices));
         return { prices, fuente: url };
-      } else {
-        console.warn("[micm] no prices from", url, "status=", status, "len=", html.length, "premium-in-html=", found);
       }
     } catch (e) {
       debug.tried.push({ url, error: e.message || String(e) });
-      console.warn("[micm] fetch failed", url, e.message || String(e));
     }
   }
 
-  // Anexamos debug al return null para visibilidad desde el endpoint
-  // (queda en el campo `fuel` cuando falla)
   return { __debug: debug };
+}
+
+/**
+ * Normaliza la respuesta del API de conectate.com.do al schema interno.
+ * Input: { from, to, data: [{name, from, to}, ...] }
+ *   "to" es el precio actual de la semana, "from" el de la semana anterior.
+ */
+function normalizeConectateFuel(j) {
+  if (!j || !Array.isArray(j.data)) return null;
+  const out = {};
+  for (const item of j.data) {
+    const name = (item.name || "").toLowerCase();
+    const price = parseFloat(item.to);  // 'to' es la semana actual
+    if (!isFinite(price) || price <= 0) continue;
+    if      (/gasolina\s+premium/.test(name))      out.gasolinaPremium = price;
+    else if (/gasolina\s+regular/.test(name))      out.gasolinaRegular = price;
+    else if (/gasoil\s+[oó]ptimo/.test(name))      out.gasoilOptimo    = price;
+    else if (/gasoil\s+regular/.test(name))        out.gasoilRegular   = price;
+    else if (/kerosene|kerosén|avtur/.test(name))  out.kerosene        = price;
+    else if (/gas\s+licuado|\bglp\b/.test(name))   out.glp             = price;
+    else if (/gas\s+natural|\bgnv\b|\bgnc\b|\bgnl\b/.test(name)) out.gasNatural = price;
+    else if (/fuel\s*oil/.test(name))              out.fuelOil         = price;
+  }
+  return Object.keys(out).length >= 4 ? out : null;
 }
 
 function normalizeMICMJson(j) {
