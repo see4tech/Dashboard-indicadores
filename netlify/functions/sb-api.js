@@ -115,7 +115,8 @@ exports.handler = async (event) => {
 
   const qsString = qs.toString();
   const url = UPSTREAM + path + (qsString ? "?" + qsString : "");
-  const blobKey = path + (qsString ? "?" + qsString : "");
+  // Blob keys no pueden empezar con / — stripeamos la barra inicial.
+  const blobKey = (path.replace(/^\/+/, "")) + (qsString ? "?" + qsString : "");
   const store = safeStore();
   const now = Date.now();
 
