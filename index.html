@@ -606,27 +606,54 @@ const Preloader = {
 /* Capa de datos — helpers                                                */
 /* ====================================================================== */
 
-/** Parámetros base para cargar TODO el sistema (tipoEntidad=TODOS). */
+/** Los 4 tipos de entidad reales del SB. tipoEntidad="TODOS" no funciona —
+ *  SB rechaza ese literal. Para obtener todos los bancos hacemos 4 requests
+ *  paralelos (uno por tipoEntidad) y unimos. */
+const SB_TIPOS_ENTIDAD = ["BM", "BAyC", "AC", "ARC"];
+
+/** Hace una request por tipoEntidad (o una sola con entidad list si el
+ *  usuario filtró), y devuelve las filas combinadas. */
+async function fetchAllScopes(path, period, extra = {}) {
+  const baseParams = {
+    periodoInicial: period,
+    periodoFinal:   period,
+    paginas: 1, registros: 5000,
+    ...extra,
+  };
+  if (state.selectedEntities.size > 0) {
+    // Usuario filtró → un solo request con la lista de entidades
+    return await safeGet(path, { ...baseParams, entidad: [...state.selectedEntities] });
+  }
+  // Sin filtro → 4 requests paralelos por tipoEntidad y union
+  const results = await Promise.all(
+    SB_TIPOS_ENTIDAD.map(t => safeGet(path, { ...baseParams, tipoEntidad: t }))
+  );
+  return results.flat();
+}
+
+/** Parámetros base para queries de rango (fetchEstados). NOTA: si selección
+ *  no vacía, manda entidad list; si vacía, manda tipoEntidad=BM (para que
+ *  algo se vea). Para multi-tipoEntidad ver fetchAllScopes. */
 function allParams(extra = {}) {
-  return {
+  const params = {
     periodoInicial: state.periodoInicial,
     periodoFinal:   state.periodoFinal,
     paginas: 1, registros: 5000,
-    tipoEntidad: "TODOS",
     ...extra,
   };
+  if (state.selectedEntities.size > 0) {
+    params.entidad = [...state.selectedEntities];
+  } else {
+    params.tipoEntidad = "BM"; // BM por default para llamadas range-style
+  }
+  return params;
 }
 
-/** Busca la última fecha con datos disponibles, agregado de TODO el sistema. */
+/** Igual que fetchAllScopes pero itera meses para atrás hasta encontrar data. */
 async function getLatestAll(path, extra = {}) {
   let period = state.periodoFinal;
   for (let i = 0; i < 6; i++) {
-    const data = await safeGet(path, {
-      periodoInicial: period, periodoFinal: period,
-      paginas: 1, registros: 5000,
-      tipoEntidad: "TODOS",
-      ...extra,
-    });
+    const data = await fetchAllScopes(path, period, extra);
     if (data?.length) return data;
     period = prevMonth(period);
   }
@@ -725,7 +752,7 @@ function rankBar(id, rows, label, color) {
 /* ====================================================================== */
 
 async function fetchResumen() {
-  // /indicadores/principales NO acepta tipoEntidad (es agregado del sistema)
+  // /indicadores/principales devuelve agregado del sistema (no acepta tipoEntidad)
   const [princ, me] = await Promise.all([
     safeGet("/indicadores/principales", {
       periodoInicial: state.periodoInicial,
@@ -765,18 +792,12 @@ async function fetchCaptaciones() {
 }
 
 async function fetchComparativa() {
-  // Sin filtro `indicador=`: SB devolvía 404 "No se ha encontrado resultados"
-  // si cualquier nombre del filtro no existía en /indicadores/financieros
-  // (varios de los nombres viejos viven en otros endpoints). Traemos todos
-  // los indicadores y renderComparativa filtra por nombre client-side.
+  // Multi-tipoEntidad para obtener data per-banco. renderComparativa filtra
+  // por nombre de indicador client-side.
   let data = [];
   let period = state.periodoFinal;
   for (let i = 0; i < 6 && !data.length; i++) {
-    data = await safeGet("/indicadores/financieros", {
-      periodoInicial: period, periodoFinal: period,
-      paginas: 1, registros: 5000,
-      tipoEntidad: "TODOS",
-    });
+    data = await fetchAllScopes("/indicadores/financieros", period);
     if (!data.length) period = prevMonth(period);
   }
   state.data.indicadoresFinancieros = data;
